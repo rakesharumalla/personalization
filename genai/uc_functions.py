@@ -51,3 +51,37 @@ RETURN
   FROM reach, conv, cat_aov
 """)
 print(spark.sql(f"SELECT * FROM {C}.gold.simulate_campaign('electronics', 'all', 10)").toPandas().T)
+
+# Business case: translate the measured revenue-per-session lift into annual dollars and margin.
+# Inputs are the customer's own numbers (defaults in the app/deck are Acme Retail assumptions).
+BUSINESS_CASE_SQL = f"""
+CREATE OR REPLACE FUNCTION {C}.gold.business_case(
+  p_monthly_sessions DOUBLE COMMENT 'storefront sessions per month, e.g. 5000000',
+  p_gross_margin DOUBLE COMMENT 'gross margin as a fraction, e.g. 0.35',
+  p_realization DOUBLE COMMENT 'share of the simulated lift expected in production, e.g. 0.5',
+  p_annual_run_cost DOUBLE COMMENT 'annual platform + team cost in USD, e.g. 750000')
+RETURNS TABLE (
+  model_variant STRING, baseline_revenue_per_session DOUBLE, personalized_revenue_per_session DOUBLE,
+  uplift_per_session DOUBLE, annual_sessions DOUBLE, annual_incremental_revenue DOUBLE,
+  annual_incremental_gross_profit DOUBLE, annual_net_benefit DOUBLE, roi_multiple DOUBLE, payback_months DOUBLE)
+COMMENT 'Annual value of personalization: (personalized - popularity revenue per session) x sessions x realization, \
+times gross margin, net of run cost. Revenue per session comes from gold.experiment_results (all sessions, \
+cold start included). Owner: VP of E-commerce; approver: CFO.'
+RETURN
+  WITH rps AS (
+    SELECT er.model_variant, sum(er.revenue) / sum(er.sessions) AS rps
+    FROM {C}.gold.experiment_results er GROUP BY er.model_variant),
+  base AS (SELECT rps AS b FROM rps WHERE model_variant = 'popularity'),
+  v AS (
+    SELECT rps.model_variant, base.b, rps.rps AS p, rps.rps - base.b AS u, p_monthly_sessions * 12 AS s
+    FROM rps, base WHERE rps.model_variant <> 'popularity')
+  SELECT v.model_variant, round(v.b, 4), round(v.p, 4), round(v.u, 4), v.s,
+         round(v.u * v.s * p_realization, 0),
+         round(v.u * v.s * p_realization * p_gross_margin, 0),
+         round(v.u * v.s * p_realization * p_gross_margin - p_annual_run_cost, 0),
+         round(v.u * v.s * p_realization * p_gross_margin / nullif(p_annual_run_cost, 0), 2),
+         round(p_annual_run_cost / nullif(v.u * v.s * p_realization * p_gross_margin / 12, 0), 1)
+  FROM v
+"""
+spark.sql(BUSINESS_CASE_SQL)
+print(spark.sql(f"SELECT * FROM {C}.gold.business_case(5000000, 0.35, 0.5, 750000)").toPandas().T)

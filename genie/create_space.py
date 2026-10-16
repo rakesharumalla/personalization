@@ -25,9 +25,17 @@ SAMPLE_QUESTIONS = [
     "Show me the lift of the challenger model over champion by country",
     "What is the conversion lift of personalized recommendations over the popularity baseline by segment in the last 7 days?",
     "What were daily sessions, conversion rate and revenue over the last 14 days?",
+    "What is personalization worth per year at 5 million sessions a month?",
 ]
 
 TRUSTED_SQL = [
+    ("What is personalization worth per year at 5 million sessions a month?", f"""
+SELECT * FROM {G}.business_case(5000000, 0.35, 0.5, 750000)"""),
+    ("What is the revenue per session lift of personalization?", f"""
+SELECT model_variant, sum(revenue) / sum(sessions) AS revenue_per_session,
+       try_divide(sum(revenue) / sum(sessions),
+                  (SELECT sum(revenue) / sum(sessions) FROM {G}.experiment_results WHERE model_variant = 'popularity')) - 1 AS lift_vs_baseline
+FROM {G}.experiment_results GROUP BY model_variant ORDER BY revenue_per_session DESC"""),
     ("What is the conversion lift by segment in the last 7 days?", f"""
 SELECT segment,
        sum(CASE WHEN model_variant <> 'popularity' THEN converted_sessions END) / sum(CASE WHEN model_variant <> 'popularity' THEN sessions END) AS personalized_conversion,
@@ -61,7 +69,15 @@ GROUP BY category ORDER BY ctr DESC"""),
 ]
 
 INSTRUCTIONS = [
-    "This space analyses an online marketplace's real-time personalization program.",
+    "This space analyses Acme Retail's real-time personalization program (an online marketplace).",
+    "Revenue per session = revenue / sessions over all sessions (cold start included); it combines conversion and AOV "
+    "and is the figure used for dollar value. For annual value, revenue, gross profit, ROI or payback ALWAYS query the "
+    "trusted table function (never compute it by hand, never blend champion and challenger) "
+    f"{G}.business_case(monthly_sessions, gross_margin, realization, annual_run_cost); Acme Retail assumptions are "
+    "5000000 sessions a month, 0.35 gross margin, 0.5 realization, 750000 annual run cost. State the assumptions.",
+    "Metric owners at Acme Retail: conversion and revenue per session = VP of E-commerce; AOV and margin = VP of "
+    "E-commerce with the CFO; recommendation CTR and category performance = VP of Merchandising; cold-start conversion "
+    "= CMO; run cost, ROI and payback = CFO.",
     "Metric definitions: CTR = clicks / impressions. Conversion rate = converted_sessions / sessions. "
     "AOV = revenue / converted_sessions. Lift = (treatment metric / control metric) - 1, shown as a percentage.",
     "Experiment: model_variant 'popularity' is the control baseline (non-personalized). 'champion' and "
@@ -114,6 +130,8 @@ space = {
              "sql": ["`recommendation_outcomes`.`user_id` = `user_segments`.`user_id`",
                      "--rt=FROM_RELATIONSHIP_TYPE_MANY_TO_ONE--"]},
         ], key=lambda x: x["id"]),
+        # trusted UC function: dollar value must come from one governed calculation
+        "sql_functions": [{"id": hid("fn_business_case"), "identifier": f"{G}.business_case"}],
     },
 }
 

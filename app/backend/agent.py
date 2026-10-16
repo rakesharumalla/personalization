@@ -16,7 +16,7 @@ import time
 
 from . import config, genie, llm, sql
 
-SYSTEM = f"""You are the Merchandiser Copilot for an online marketplace's personalization program.
+SYSTEM = f"""You are the Merchandiser Copilot for Acme Retail's personalization program (Acme Retail runs an online marketplace).
 You help merchandising managers understand recommendation performance and plan campaigns.
 Rules:
 - For any number about performance (CTR, conversion, lift, revenue, segments, categories) call ask_genie. Never invent numbers.
@@ -24,6 +24,12 @@ Rules:
   engaged_browser, casual_browser, at_risk, or all. Categories: electronics, home_kitchen, fashion_women, fashion_men,
   beauty, sports_outdoors, toys_games, books, grocery_gourmet, pets, health_wellness, garden, or all.
 - To find products ("like X", "for runners", "gift ideas"), call lookup_product.
+- For dollar value, margin, ROI or payback ("what is this worth?", "make the case to the CFO"), call business_case.
+  Acme Retail defaults unless the user gives their own: 5,000,000 monthly sessions, 0.35 gross margin,
+  0.5 realization of the simulated lift, 750000 annual run cost. Always state the assumptions you used.
+- Metric owners at Acme Retail: conversion and revenue per session -> VP of E-commerce; AOV and margin ->
+  VP of E-commerce with the CFO; recommendation CTR and categories -> VP of Merchandising; cold-start
+  conversion and paid-traffic efficiency -> CMO; run cost, ROI and payback -> CFO.
 - Be concise: short paragraphs or bullets, cite the numbers you got from tools, and end with one recommended action.
 Catalog: {config.CATALOG}."""
 
@@ -41,6 +47,15 @@ TOOLS = [
             "category": {"type": "string"}, "segment": {"type": "string"},
             "discount_pct": {"type": "number", "description": "e.g. 10 for 10%"}},
             "required": ["category", "segment", "discount_pct"]}}},
+    {"type": "function", "function": {
+        "name": "business_case",
+        "description": "Annual incremental revenue, gross profit, net benefit, ROI and payback of personalization, "
+                       "from the measured revenue-per-session lift and the customer's own volume and margin.",
+        "parameters": {"type": "object", "properties": {
+            "monthly_sessions": {"type": "number", "default": 5000000},
+            "gross_margin": {"type": "number", "description": "fraction, e.g. 0.35", "default": 0.35},
+            "realization": {"type": "number", "description": "share of simulated lift expected, e.g. 0.5", "default": 0.5},
+            "annual_run_cost": {"type": "number", "default": 750000}}}}},
     {"type": "function", "function": {
         "name": "lookup_product",
         "description": "Semantic search over the product catalog (Vector Search on title/description).",
@@ -63,6 +78,13 @@ async def _tool(name: str, args: dict) -> dict:
             f"SELECT * FROM {config.CATALOG}.gold.simulate_campaign('{_q(args['category'])}', "
             f"'{_q(args['segment'])}', {float(args['discount_pct'])})", ttl=30)
         return {"rows": rows}
+    if name == "business_case":
+        a = {"monthly_sessions": 5_000_000, "gross_margin": 0.35, "realization": 0.5, "annual_run_cost": 750_000,
+             **{k: v for k, v in args.items() if v is not None}}
+        rows = await sql.query(
+            f"SELECT * FROM {config.CATALOG}.gold.business_case({float(a['monthly_sessions'])}, "
+            f"{float(a['gross_margin'])}, {float(a['realization'])}, {float(a['annual_run_cost'])})", ttl=30)
+        return {"assumptions": a, "rows": rows}
     if name == "lookup_product":
         k = int(args.get("k") or 5)
         w = config.ws()

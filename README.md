@@ -1,11 +1,11 @@
-# Real-Time Personalization on Databricks
+# Acme Retail: Real-Time Personalization on Databricks
 
-An online marketplace that serves every shopper the right product within ~100 ms of a page view, using what
+Built for **Acme Retail**, an online marketplace (sponsor: VP of E-commerce; funding approver: CFO). It serves every shopper the right product within ~100 ms of a page view, using what
 they *just* clicked, with governance, explanations, and a business feedback loop. Everything runs on one
 platform: no separate ML stack, serving database, or BI tool.
 
 - Spec: [`docs/spec.md`](docs/spec.md)
-- Trade-off log: [`docs/decisions.md`](docs/decisions.md)
+- How AI tools built each part, plus the trade-off log: [`docs/decisions.md`](docs/decisions.md)
 - The four narrative answers: [`docs/about.md`](docs/about.md)
 - **Customer slide deck:** [`docs/deck/index.html`](docs/deck/index.html) (PDF: [`docs/personalization-deck.pdf`](docs/personalization-deck.pdf))
 - **Customer demo script:** [`docs/demo.md`](docs/demo.md)
@@ -48,6 +48,22 @@ experience is one-size-fits-all:
 
 The synthetic world has hidden shopper preferences that the models never see. The A/B simulator draws clicks and
 purchases from those preferences, so the lift comes from ranking quality and is not hard-coded.
+
+**Who owns each outcome at Acme Retail**
+
+| Metric | Owner |
+|---|---|
+| Session conversion, revenue per session | VP of E-commerce (pilot sponsor) |
+| AOV, margin mix | VP of E-commerce, with the CFO |
+| Recommendation CTR, category performance | VP of Merchandising |
+| Cold-start conversion | CMO (return on paid acquisition) |
+| Run cost, ROI, payback | CFO (funding approver) |
+
+**What it is worth (expected case, champion model).** Revenue per session rose from $0.95 to $1.36. At Acme Retail's
+assumed 5M sessions a month, 35% gross margin, 50% realization of the simulated lift and $750k a year run cost, that
+is **$12.3M incremental revenue and $4.3M gross profit a year, with payback in about 2 months** (low case: $2.1M gross
+profit, 4.2 months). The UC function `gold.business_case(...)` computes it; the Business Console's CFO panel, Genie
+and the copilot all use it. Details: [`docs/about.md`](docs/about.md).
 
 ---
 
@@ -134,6 +150,7 @@ flowchart LR
 |---|---|---|
 | Vector Search | `genai/vector_search_setup.py` | Endpoint `pers-vs` and delta-sync index `gold.product_index` with managed `databricks-gte-large-en` embeddings |
 | Campaign tool | `genai/uc_functions.py` | UC table function `gold.simulate_campaign(category, segment, discount_pct)`: reach, expected conversion, incremental orders and revenue |
+| Business case | `genai/uc_functions.py` | UC table function `gold.business_case(monthly_sessions, gross_margin, realization, annual_run_cost)`: annual incremental revenue, gross profit, net benefit, ROI, payback |
 | Explanations | `app/backend/explain.py` | Grounded one-line "why this?" from Claude Haiku, cached in `app.explanation_cache` |
 | Merchandiser Copilot | `app/backend/agent.py` | Tool-calling agent on Claude Sonnet with `ask_genie`, `simulate_campaign` and `lookup_product`, streamed over SSE with visible tool calls |
 | Copilot evaluation | `genai/agent_eval.py` | MLflow GenAI evaluation on 20 golden questions with expected-tool, relevance and grounded-numbers scorers |
@@ -160,7 +177,7 @@ flowchart LR
 | Backend | `app/backend/` | FastAPI routes: `/api/recs`, `/events`, `/explain`, `/shoppers`, `/products`, `/similar`, `/kpis/*`, `/pipeline`, `/genie`, `/agent` (SSE), `/about`, `/health`, `/img`. Also serves the React build |
 | Frontend | `app/frontend/` | React + Vite + TypeScript, MUI, Recharts, React Query |
 | Storefront Simulator | `pages/Storefront.tsx` | Pick or create a shopper, browse, click. Shows recs with a latency badge, champion/challenger toggle, the non-personalized side-by-side, "why this?" notes, Vector Search "similar items", and a live session timeline |
-| Business Console | `pages/Console.tsx` | KPI lift cards, daily CTR, segments, categories, champion vs challenger (offline and online), organic funnel, data quality, freshness, live p50/p95 |
+| Business Console | `pages/Console.tsx` | KPI lift cards with metric owners, a CFO business-case panel with editable assumptions, daily CTR, segments, categories, champion vs challenger (offline and online), organic funnel, data quality, freshness, live p50/p95 |
 | Ask the Data | `pages/Ask.tsx` | Genie chat (SQL and results) and Merchandiser Copilot (streamed tool calls) |
 | About This Build | `pages/About.tsx` | The four questions, the architecture, the build log rendered from `docs/decisions.md`, the spec, and deep links to every asset |
 

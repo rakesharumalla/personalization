@@ -47,7 +47,7 @@ export default function App() {
         <Toolbar sx={{ gap: 3 }}>
           <Box>
             <Typography variant="h6" sx={{ lineHeight: 1.1 }}>
-              Real-Time Personalization
+              Acme Retail · Real-Time Personalization
             </Typography>
             <Typography variant="caption" sx={{ opacity: 0.7 }}>
               Lakeflow · Unity Catalog · Lakebase · Model Serving · Genie — on Databricks

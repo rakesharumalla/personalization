@@ -1,4 +1,5 @@
-import { Alert, Box, Card, CardContent, Chip, Grid, Skeleton, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material'
+import { useState } from 'react'
+import { Alert, Box, Card, CardContent, Chip, Grid, InputAdornment, Skeleton, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
 import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { api, money, pct, pretty } from '../api'
@@ -10,7 +11,7 @@ function useKpi(name: string) {
   return useQuery({ queryKey: ['kpi', name], queryFn: () => api.get<Row[]>(`/api/kpis/${name}`) })
 }
 
-function Stat({ label, base, pers, fmt = pct, target }: { label: string; base?: number; pers?: number; fmt?: (v: unknown) => string; target?: string }) {
+function Stat({ label, base, pers, fmt = pct, target, owner }: { label: string; base?: number; pers?: number; fmt?: (v: unknown) => string; target?: string; owner?: string }) {
   const lift = base && pers ? pers / base - 1 : undefined
   return (
     <Card sx={{ height: '100%' }}>
@@ -21,6 +22,7 @@ function Stat({ label, base, pers, fmt = pct, target }: { label: string; base?: 
           {lift !== undefined && <Chip size="small" color={lift >= 0 ? 'success' : 'error'} label={`${lift >= 0 ? '+' : ''}${(lift * 100).toFixed(0)}%`} />}
         </Stack>
         <Typography variant="body2" color="text.secondary">baseline {fmt(base)} {target && `· target ${target}`}</Typography>
+        {owner && <Typography variant="caption" sx={{ display: 'block', mt: 0.5, fontWeight: 600, color: 'secondary.main' }}>Owner: {owner}</Typography>}
       </CardContent>
     </Card>
   )
@@ -47,6 +49,82 @@ function pivot(rows: Row[] | undefined, key: string, series: string, value: stri
   return [...m.values()]
 }
 
+const rps = (r: Row) => (r && r.sessions ? r.revenue / r.sessions : undefined)
+const usd = (v: number) => (Math.abs(v) >= 1e6 ? `$${(v / 1e6).toFixed(1)}M` : `$${Math.round(v / 1000).toLocaleString()}k`)
+
+/** CFO view: measured revenue-per-session lift x Acme Retail's volume, margin and run cost (same math as UC fn gold.business_case). */
+function BusinessCase({ by }: { by: Record<string, Row> }) {
+  const [sessions, setSessions] = useState(5_000_000)
+  const [margin, setMargin] = useState(35)
+  const [realization, setRealization] = useState(50)
+  const [cost, setCost] = useState(750_000)
+  const base = rps(by.popularity) || 0
+  const calc = (variant: string, real: number) => {
+    const uplift = (rps(by[variant]) || 0) - base
+    const revenue = uplift * sessions * 12 * (real / 100)
+    const gp = revenue * (margin / 100)
+    return { uplift, revenue, gp, net: gp - cost, roi: cost ? gp / cost : 0, payback: gp > 0 ? cost / (gp / 12) : Infinity }
+  }
+  const exp = calc('champion', realization)
+  const num = (label: string, v: number, set: (n: number) => void, adorn?: { start?: string; end?: string }) => (
+    <TextField size="small" label={label} type="number" value={v} onChange={(e) => set(Number(e.target.value) || 0)}
+      slotProps={{ input: { startAdornment: adorn?.start ? <InputAdornment position="start">{adorn.start}</InputAdornment> : undefined,
+        endAdornment: adorn?.end ? <InputAdornment position="end">{adorn.end}</InputAdornment> : undefined } }} />
+  )
+  return (
+    <Card sx={{ borderColor: 'primary.main' }}>
+      <CardContent>
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
+          <Box sx={{ flex: 1.1 }}>
+            <Typography variant="overline" color="primary">Business case · for the CFO and VP of E-commerce</Typography>
+            <Typography variant="h5" sx={{ mt: 0.5 }}>
+              {usd(exp.revenue)} incremental revenue, {usd(exp.gp)} gross profit a year
+            </Typography>
+            <Typography color="text.secondary" sx={{ mt: 1 }}>
+              Revenue per session rose from {money(base)} to {money(rps(by.champion))} with the champion model ({money(exp.uplift)} per session).
+              Annualized at Acme Retail's volume, discounted to {realization}% realization because the lift is simulated, net of run cost:
+              <b> {usd(exp.net)} net benefit, {exp.roi.toFixed(1)}x return, payback in {exp.payback.toFixed(1)} months.</b>
+            </Typography>
+            <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1.5, mt: 2 }}>
+              {num('Monthly sessions', sessions, setSessions)}
+              {num('Gross margin', margin, setMargin, { end: '%' })}
+              {num('Realization of lift', realization, setRealization, { end: '%' })}
+              {num('Annual run cost', cost, setCost, { start: '$' })}
+            </Stack>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+              Defaults are Acme Retail planning assumptions; replace them with actuals. Run cost covers platform plus a small team.
+              Same math as the UC function <code>gold.business_case</code>, which Genie and the copilot also use.
+            </Typography>
+          </Box>
+          <Box sx={{ flex: 1 }}>
+            <Table size="small">
+              <TableHead><TableRow><TableCell>Scenario (champion)</TableCell><TableCell align="right">Revenue / yr</TableCell><TableCell align="right">Gross profit</TableCell><TableCell align="right">Payback</TableCell></TableRow></TableHead>
+              <TableBody>
+                {[['Low', realization / 2], ['Expected', realization], ['High', Math.min(100, realization * 1.5)]].map(([name, r]) => {
+                  const c = calc('champion', r as number)
+                  return (
+                    <TableRow key={name as string} sx={name === 'Expected' ? { bgcolor: '#FFF1EE' } : undefined}>
+                      <TableCell>{name} ({r}% realization)</TableCell><TableCell align="right">{usd(c.revenue)}</TableCell>
+                      <TableCell align="right">{usd(c.gp)}</TableCell><TableCell align="right">{c.payback.toFixed(1)} mo</TableCell>
+                    </TableRow>
+                  )
+                })}
+                <TableRow>
+                  <TableCell>Challenger, expected</TableCell><TableCell align="right">{usd(calc('challenger', realization).revenue)}</TableCell>
+                  <TableCell align="right">{usd(calc('challenger', realization).gp)}</TableCell><TableCell align="right">{calc('challenger', realization).payback.toFixed(1)} mo</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+              Owners: conversion and revenue per session, VP of E-commerce · CTR and categories, VP of Merchandising · cold start, CMO · ROI and payback, CFO.
+            </Typography>
+          </Box>
+        </Stack>
+      </CardContent>
+    </Card>
+  )
+}
+
 export default function Console() {
   const summary = useKpi('summary')
   const daily = useKpi('daily')
@@ -69,20 +147,23 @@ export default function Console() {
       <Box>
         <Typography variant="h5">Business Console</Typography>
         <Typography color="text.secondary">
-          Simulated A/B test — popularity baseline (control, 50%) vs. personalized champion/challenger (treatment, 25% + 25%).
-          Outcomes are drawn from the simulator's hidden shopper preferences, so lift is earned by ranking quality. Source: <code>gold.experiment_results</code>.
+          Acme Retail · simulated A/B test — popularity baseline (control, 50%) vs. personalized champion/challenger (treatment, 25% + 25%).
+          Outcomes are drawn from the simulator's hidden shopper preferences, so lift is earned by ranking quality. KPI cards cover all sessions, cold start included (the deck quotes returning
+          shoppers). Source: <code>gold.experiment_results</code>.
         </Typography>
       </Box>
       {err && <Alert severity="warning">KPIs unavailable: {err.message}</Alert>}
       {summary.isLoading ? <Skeleton variant="rounded" height={120} /> : (
         <Grid container spacing={2}>
-          <Grid size={{ xs: 6, md: 2.4 }}><Stat label="Recommendation CTR" base={base.ctr} pers={pers.ctr} target="≥ 6%" /></Grid>
-          <Grid size={{ xs: 6, md: 2.4 }}><Stat label="Session conversion" base={base.conversion} pers={pers.conversion} fmt={(v) => pct(v, 2)} target="≥ 2.6%" /></Grid>
-          <Grid size={{ xs: 6, md: 2.4 }}><Stat label="Cold-start conversion" base={base.cold_conversion} pers={pers.cold_conversion} fmt={(v) => pct(v, 2)} target="≥ 1.4%" /></Grid>
-          <Grid size={{ xs: 6, md: 2.4 }}><Stat label="AOV" base={base.aov} pers={pers.aov} fmt={money} target="+5–8%" /></Grid>
-          <Grid size={{ xs: 12, md: 2.4 }}><Stat label="Revenue (14d, per arm)" base={base.revenue} pers={(pers.revenue || 0) + (by.challenger?.revenue || 0)} fmt={(v) => (typeof v === 'number' ? `$${Math.round(v).toLocaleString()}` : '—')} /></Grid>
+          <Grid size={{ xs: 6, md: 2.4 }}><Stat label="Recommendation CTR" base={base.ctr} pers={pers.ctr} target="≥ 6%" owner="VP of Merchandising" /></Grid>
+          <Grid size={{ xs: 6, md: 2.4 }}><Stat label="Session conversion" base={base.conversion} pers={pers.conversion} fmt={(v) => pct(v, 2)} target="≥ 2.6%" owner="VP of E-commerce" /></Grid>
+          <Grid size={{ xs: 6, md: 2.4 }}><Stat label="Cold-start conversion" base={base.cold_conversion} pers={pers.cold_conversion} fmt={(v) => pct(v, 2)} target="≥ 1.4%" owner="CMO" /></Grid>
+          <Grid size={{ xs: 6, md: 2.4 }}><Stat label="AOV" base={base.aov} pers={pers.aov} fmt={money} target="+5–8%" owner="VP of E-commerce + CFO" /></Grid>
+          <Grid size={{ xs: 12, md: 2.4 }}><Stat label="Revenue per session" base={rps(base)} pers={rps(pers)} fmt={money} owner="VP of E-commerce" /></Grid>
         </Grid>
       )}
+
+      {!summary.isLoading && rps(base) && <BusinessCase by={by} />}
 
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 8 }}>
@@ -95,7 +176,7 @@ export default function Console() {
                 <Tooltip formatter={(v) => pct(v)} />
                 <Legend />
                 {['popularity', 'champion', 'challenger'].map((k) => (
-                  <Line key={k} dataKey={k} stroke={COLORS[k]} strokeWidth={2} dot={false} />
+                  <Line isAnimationActive={false} key={k} dataKey={k} stroke={COLORS[k]} strokeWidth={2} dot={false} />
                 ))}
               </LineChart>
             </ResponsiveContainer>
@@ -128,8 +209,8 @@ export default function Console() {
                 <YAxis tickFormatter={(v) => pct(v, 1)} tick={{ fontSize: 11 }} />
                 <Tooltip formatter={(v) => pct(v, 2)} />
                 <Legend />
-                <Bar dataKey="baseline" fill={COLORS.baseline} />
-                <Bar dataKey="personalized" fill={COLORS.personalized} />
+                <Bar isAnimationActive={false} dataKey="baseline" fill={COLORS.baseline} />
+                <Bar isAnimationActive={false} dataKey="personalized" fill={COLORS.personalized} />
               </BarChart>
             </ResponsiveContainer>
           </Panel>
@@ -143,8 +224,8 @@ export default function Console() {
                 <YAxis tickFormatter={(v) => pct(v, 0)} tick={{ fontSize: 11 }} />
                 <Tooltip formatter={(v) => pct(v)} />
                 <Legend />
-                <Bar dataKey="baseline" fill={COLORS.baseline} />
-                <Bar dataKey="personalized" fill={COLORS.personalized} />
+                <Bar isAnimationActive={false} dataKey="baseline" fill={COLORS.baseline} />
+                <Bar isAnimationActive={false} dataKey="personalized" fill={COLORS.personalized} />
               </BarChart>
             </ResponsiveContainer>
           </Panel>
@@ -159,8 +240,8 @@ export default function Console() {
                 <YAxis yAxisId="r" orientation="right" tickFormatter={(v) => pct(v, 1)} tick={{ fontSize: 11 }} />
                 <Tooltip />
                 <Legend />
-                <Line yAxisId="l" dataKey="sessions" stroke="#1B3139" dot={false} />
-                <Line yAxisId="r" dataKey="conversion_rate" stroke="#FF3621" dot={false} />
+                <Line isAnimationActive={false} yAxisId="l" dataKey="sessions" stroke="#1B3139" dot={false} />
+                <Line isAnimationActive={false} yAxisId="r" dataKey="conversion_rate" stroke="#FF3621" dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </Panel>

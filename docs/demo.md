@@ -1,7 +1,18 @@
-# Customer Demo Script — Real-Time Personalization on Databricks
+# Customer Demo Script — Acme Retail: Real-Time Personalization on Databricks
 
 **Length:** 25–30 minutes (a 10-minute short version is at the end).
-**Audience:** a Digital Native Business with a CDO / VP Data, a head of merchandising, and ML/data engineers.
+**Customer:** Acme Retail, a digital-native online marketplace.
+
+**Who is in the room, and what each needs to leave with**
+
+| Attendee | Owns | Leaves with |
+|---|---|---|
+| **VP of E-commerce** (pilot sponsor) | Conversion, revenue per session, AOV | Conversion +47%, revenue per session +43%, and the business case they will take to the CFO |
+| **CFO** (funding approver) | ROI, payback, run cost | $12.3M revenue, $4.3M gross profit a year (expected case), payback in about 2 months, with assumptions they can change |
+| **VP of Merchandising** | CTR, category performance | CTR doubles, and answers in seconds from Genie and the copilot |
+| **CMO** | Return on paid acquisition | Cold-start conversion doubles, so more paid first visits turn into buyers |
+| **Data / ML engineering leads** | Platform, governance, operations | One bundle, lineage end to end, masks, monitoring |
+
 **Story in one line:** *"From a click to a personalized, explained, governed recommendation in ~100 ms, and the
 business can ask how it's working in plain English, all on one platform."*
 
@@ -38,11 +49,14 @@ databricks bundle run pers_refresh -p $DATABRICKS_CONFIG_PROFILE
 ## 1. Frame the problem (2 min) — *About This Build → The four questions*
 
 Talk track:
-> "Your paid traffic lands on the same homepage whether it's someone's first visit or their fiftieth. About a third
+> "Acme Retail's paid traffic lands on the same homepage whether it's someone's first visit or their fiftieth. About a third
 > of sessions are brand-new shoppers with no history. And when merchandising asks *why did we show this, and did it
 > work?*, the answer lives in app code nobody in the business can read."
 
-Show the four problems (generic experience, cold start, no explainability, siloed stack) and the target table.
+Show the four problems (generic experience, cold start, no explainability, siloed stack), then the
+**"Who owns each outcome at Acme Retail"** table. Name the owner as you go:
+> "Conversion and revenue per session sit on the VP of E-commerce's scorecard, CTR on Merchandising's, cold start
+> on the CMO's. Today none of them can see what the recommendation rail is doing for their number."
 
 ---
 
@@ -73,15 +87,24 @@ Show the four problems (generic experience, cold start, no explainability, siloe
 
 ## 3. Did it work? (5 min) — *Business Console*
 
-1. **KPI cards**: personalized vs popularity for CTR (≈3% → ≈6%), session conversion (≈1.9% → ≈2.8–3.3%),
-   cold-start conversion (≈0.8% → ≈1.4–1.7%), and AOV.
+1. **KPI cards**: each card names its owner. Speak to that person:
+   - to the VP of Merchandising: recommendation CTR 3.1% → 6.1%;
+   - to the VP of E-commerce: session conversion 1.93% → 2.84–3.30%, revenue per session $0.95 → $1.36;
+   - to the CMO: cold-start conversion 0.83% → 1.67%, so paid first visits convert twice as often.
    > "These numbers aren't hard-coded. The simulator has hidden shopper preferences the model never sees, and lift
    > is earned by ranking quality."
    Be candid about AOV: the champion's AOV comes out below baseline because it favours cheaper items, while the challenger's beats baseline. Use that as the lead-in to the champion vs challenger panel.
-2. **Daily CTR by variant** and **conversion by segment**: personalization helps every segment, most for cold start.
-3. **Champion vs challenger**: offline NDCG@10 / Recall@50 next to online CTR and conversion.
+2. **Business case panel (the CFO moment).** Turn to the CFO and VP of E-commerce:
+   > "Revenue per session is up $0.41. At Acme Retail's 5 million sessions a month, and banking only half of the
+   > simulated lift, that's $12.3M of revenue and $4.3M of gross profit a year. Against a $750k run cost, payback is
+   > about two months."
+   Type their real monthly sessions and margin into the panel live; everything recalculates. Show the low case
+   ($2.1M gross profit, payback 4.2 months) so the CFO sees the downside. The same math is the UC function
+   `gold.business_case`, so Genie and the copilot give the same answer.
+3. **Daily CTR by variant** and **conversion by segment**: personalization helps every segment, most for cold start.
+4. **Champion vs challenger**: offline NDCG@10 / Recall@50 next to online CTR and conversion.
    > "This is how you decide whether to promote a model: aliases in Unity Catalog, one click to roll."
-4. **Data quality & freshness**: expectation drops (null user_id, bad event types, duplicates, quarantine),
+5. **Data quality & freshness**: expectation drops (null user_id, bad event types, duplicates, quarantine),
    pipeline state, last ingested event, and live p50/p95 latency from `app.recommendation_log`.
 
 ---
@@ -100,6 +123,8 @@ Then ask something unscripted from the room, e.g. *"Which country has the lowest
 **Merchandiser Copilot tab:**
 - *"Which segment should we target with a 10% electronics campaign, and what lift should we expect?"*
 - Point out the **streamed tool calls**: `ask_genie` → `simulate_campaign` (a UC function) → answer with numbers.
+- *"Make the case to our CFO: what is personalization worth at 5 million sessions a month?"* This calls
+  `business_case` and states the assumptions it used.
 - *"Find gift ideas for a home cook and tell me how home_kitchen performs with personalization."* This calls `lookup_product` (Vector Search) plus Genie.
 > "The merchandiser goes from an analyst ticket that takes hours to an answer in seconds, and every tool runs under the app's governed identity."
 
@@ -119,7 +144,9 @@ Walk the diagram left to right, then prove each box in the workspace:
 | Monitoring | Inference tables `ml.recommender_*` written by AI Gateway |
 | One deploy | `databricks bundle deploy` + one `pers-setup` job (show `databricks.yml`) |
 
-**Build log & trade-offs** tab: AI tools used (Claude Code, Databricks Assistant, Genie, FMAPI) and each decision with its rationale.
+**Build log & trade-offs** tab: how the AI coding agent (Claude Code) built each part, what the architect decided,
+how each part was verified, and the real failures and fixes along the way. Also the AI that ships in the product
+(Foundation Model APIs, Vector Search, Genie), and every design decision with its rationale.
 
 For engineers who want to see the data, open the **review notebook**: job status, volumes, bronze/silver/gold samples,
 Lakebase rows, live endpoint calls, Vector Search and Genie, all in one place.
@@ -132,7 +159,11 @@ Lakebase rows, live endpoint calls, Vector Search and Genie, all in one place.
 > milliseconds, Model Serving and Foundation Models personalize and explain, Genie lets the business ask questions, and the
 > App delivers it. No stitched-together ML stack, serving database or BI tool."
 
-**Suggested next step:** a 2-week pilot on the customer's own clickstream. Swap `data_gen/` for their event feed (Auto Loader / Kafka), keep everything else.
+**The ask (to the VP of E-commerce and the CFO):** approve a 2-week pilot on Acme Retail's own clickstream, with
+a live A/B test on a slice of traffic. Success criteria are the owners' own numbers: conversion and revenue per
+session for the VP of E-commerce, CTR for Merchandising, cold-start conversion for the CMO. The pilot replaces
+the 50% realization assumption with a measured lift, so the CFO funds the rollout on real data. Swap `data_gen/`
+for their event feed (Auto Loader / Kafka); keep everything else.
 
 ---
 
@@ -141,7 +172,7 @@ Lakebase rows, live endpoint calls, Vector Search and Genie, all in one place.
 1. Storefront: returning shopper, latency badge, non-personalized side-by-side (2 min)
 2. Click two products → rail shifts; read a *why this?* (2 min)
 3. New cold-start shopper (1 min)
-4. Console KPI cards + champion vs challenger (2 min)
+4. Console KPI cards with owners, then the business case panel for the CFO (2 min)
 5. One Genie question + one copilot question (2 min)
 6. Lineage graph (1 min)
 

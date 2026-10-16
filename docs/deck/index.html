@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Real-time personalization on Databricks</title>
+<title>Acme Retail: real-time personalization on Databricks</title>
 <link rel="stylesheet" href="colors_and_type.css">
 <style>
   html,body{margin:0;background:#0e1a1f;}
@@ -122,11 +122,11 @@
       <img src="assets/brand/databricks-logo-white.svg" alt="Databricks" class="logo-tl">
       <div style="display:flex;align-items:center;gap:14px;margin-top:40px;">
         <div class="accent-bar"></div>
-        <span class="eyebrow">Digital native commerce</span>
+        <span class="eyebrow">Acme Retail</span>
       </div>
       <div style="margin-top:auto;max-width:820px;">
         <div class="title" style="font-size:72px;">Real-time personalization on Databricks</div>
-        <div class="subtitle" style="margin-top:24px;">The right product for every shopper within about 100 ms of a click, governed, explained, and measured on one platform.</div>
+        <div class="subtitle" style="margin-top:24px;">The right product for every Acme Retail shopper within about 100 ms of a click, worth an expected $12.3M of revenue a year.</div>
       </div>
       <img src="assets/brand/illustration-nodal-02.svg" style="position:absolute;right:64px;top:90px;height:300px;opacity:.95;" alt="">
       <div class="footer"><span>Databricks</span><span>2026</span></div>
@@ -137,12 +137,12 @@
   <section data-pattern="agenda" data-label="Agenda">
     <div class="slide">
       <span class="eyebrow">Agenda</span>
-      <div class="title" style="margin-top:14px;font-size:44px;">From the problem to a pilot plan</div>
+      <div class="title" style="margin-top:14px;font-size:44px;">From the problem to a funded pilot</div>
       <div class="rows" style="margin-top:48px;">
-        <div class="r"><span class="rn">01</span><span class="rt">The business challenge</span></div>
+        <div class="r"><span class="rn">01</span><span class="rt">Acme Retail's challenge and who owns each outcome</span></div>
         <div class="r"><span class="rn">02</span><span class="rt">The Databricks solution and architecture</span></div>
-        <div class="r"><span class="rn">03</span><span class="rt">Outcomes from the A/B experiment</span></div>
-        <div class="r"><span class="rn">04</span><span class="rt">How to get started</span></div>
+        <div class="r"><span class="rn">03</span><span class="rt">Outcomes and the business case</span></div>
+        <div class="r"><span class="rn">04</span><span class="rt">The pilot we propose</span></div>
       </div>
     </div>
   </section>
@@ -151,7 +151,7 @@
   <section data-pattern="content-bullets" data-label="Business challenge">
     <div class="slide">
       <span class="eyebrow">The business challenge</span>
-      <div class="title" style="margin-top:14px;font-size:42px;">Paid traffic lands on a <span class="em">generic</span> store</div>
+      <div class="title" style="margin-top:14px;font-size:42px;">Acme Retail's paid traffic lands on a <span class="em">generic</span> store</div>
       <div class="subtitle" style="margin-top:12px;">A first-time visitor and a loyal repeat buyer see the same homepage, rails, and offers.</div>
       <div style="display:flex;gap:56px;margin-top:40px;align-items:flex-start;">
         <ul class="bullets" style="flex:1;">
@@ -162,11 +162,26 @@
         </ul>
         <img src="assets/brand/illustration-nodal-05.svg" style="width:300px;height:auto;" alt="">
       </div>
-      <div class="footer"><span>Databricks</span><span>Real-time personalization</span></div>
+      <div class="footer"><span>Databricks</span><span>Acme Retail</span></div>
     </div>
   </section>
 
-  <!-- 4. why it's hard today -->
+  <!-- 4. metric owners -->
+  <section data-pattern="exec-summary" data-label="Metric owners">
+    <div class="slide">
+      <div class="action-kicker">Who owns the outcome</div>
+      <div class="action-title" style="margin-top:8px;">Every metric sits on an Acme Retail leader's scorecard</div>
+      <div class="action-rule"></div>
+      <div class="exsum">
+        <div class="item"><div class="n">01</div><div><div class="h">VP of E-commerce, pilot sponsor</div><div class="d">Owns session conversion, revenue per session and AOV: the online revenue growth target.</div></div></div>
+        <div class="item"><div class="n">02</div><div><div class="h">CFO, funding approver</div><div class="d">Owns ROI, payback and run cost, and co-owns AOV and margin mix with E-commerce.</div></div></div>
+        <div class="item"><div class="n">03</div><div><div class="h">VP of Merchandising</div><div class="d">Owns recommendation CTR and category performance, and needs answers without an analyst ticket.</div></div></div>
+        <div class="item"><div class="n">04</div><div><div class="h">CMO</div><div class="d">Owns return on paid acquisition, so cold-start shoppers who buy on their first visit move this number.</div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. why it's hard today -->
   <section data-pattern="comparison-table" data-label="Stitched stack vs platform">
     <div class="slide">
       <div class="action-kicker">Why it is hard today</div>
@@ -185,7 +200,7 @@
     </div>
   </section>
 
-  <!-- 5. section: solution -->
+  <!-- 6. section: solution -->
   <section data-pattern="section-divider" data-label="Section: solution">
     <div class="slide dark" style="justify-content:center;">
       <span class="eyebrow">Section 02</span>
@@ -194,7 +209,7 @@
     </div>
   </section>
 
-  <!-- 6. three capabilities -->
+  <!-- 7. three capabilities -->
   <section data-pattern="three-card" data-label="Three capabilities">
     <div class="slide">
       <span class="eyebrow">The solution</span>
@@ -202,12 +217,12 @@
       <div class="cards">
         <div class="card"><div class="pico"><span></span></div><div class="ct">Real-time signal</div><div class="cb">Lakeflow streams clickstream into governed tables. Lakebase serves features and live session state in milliseconds.</div></div>
         <div class="card"><div class="pico"><span></span></div><div class="ct">Intelligence</div><div class="cb">A two-stage recommender on Model Serving, Vector Search for cold start, and grounded LLM explanations.</div></div>
-        <div class="card"><div class="pico"><span></span></div><div class="ct">Business loop</div><div class="cb">An A/B experiment, a Genie space, and a merchandiser copilot that simulates campaigns.</div></div>
+        <div class="card"><div class="pico"><span></span></div><div class="ct">Business loop</div><div class="cb">An A/B experiment, a business case in dollars, a Genie space, and a merchandiser copilot.</div></div>
       </div>
     </div>
   </section>
 
-  <!-- 7. architecture -->
+  <!-- 8. architecture -->
   <section data-pattern="content-bullets" data-label="Architecture">
     <div class="slide" style="padding:48px 88px 40px;">
       <span class="eyebrow">Architecture</span>
@@ -216,7 +231,7 @@
     </div>
   </section>
 
-  <!-- 8. request path -->
+  <!-- 9. request path -->
   <section data-pattern="four-step" data-label="Request path">
     <div class="slide">
       <div class="action-kicker">How it works</div>
@@ -231,7 +246,7 @@
     </div>
   </section>
 
-  <!-- 9. enterprise-ready -->
+  <!-- 10. enterprise-ready -->
   <section data-pattern="exec-summary" data-label="Enterprise-ready">
     <div class="slide">
       <div class="action-kicker">Built for production</div>
@@ -245,58 +260,107 @@
     </div>
   </section>
 
-  <!-- 10. section: outcomes -->
-  <section data-pattern="section-divider" data-label="Section: outcomes">
-    <div class="slide dark" style="justify-content:center;">
-      <span class="eyebrow">Section 03</span>
-      <div class="title" style="font-size:64px;margin-top:18px;max-width:900px;">Outcomes from a 14-day A/B experiment</div>
+  <!-- 11. how AI built it -->
+  <section data-pattern="comparison-table" data-label="How AI built it">
+    <div class="slide">
+      <div class="action-kicker">How we built it</div>
+      <div class="action-title" style="margin-top:8px;">An AI agent built every layer; the architect made every call</div>
+      <div class="action-rule"></div>
+      <table class="dv-table">
+        <thead><tr><th style="width:18%;">Layer</th><th style="width:41%;">What the AI agent did</th><th style="width:41%;">Human decision, and a fix caught in testing</th></tr></thead>
+        <tbody>
+          <tr><td>Data and pipeline</td><td>Wrote the persona simulator, Lakeflow pipeline and masks</td><td>Set the 3% CTR baseline; first calibration gave 0.03% conversion, re-tuned in 3 runs</td></tr>
+          <tr><td>Models</td><td>Wrote ALS, embeddings and the LightGBM ranker in MLflow</td><td>Chose two-stage design; fixed an artifact crash from Spark Connect metadata</td></tr>
+          <tr><td>Serving</td><td>Wrote the endpoint, Lakebase sync and fallback path</td><td>Found every live call silently falling back; fixed the response parser</td></tr>
+          <tr><td>GenAI</td><td>Wrote the copilot, explanations and a 20-question eval</td><td>Grounding judge scored 10% without evidence; fixed to 20 of 20</td></tr>
+        </tbody>
+      </table>
+      <div class="source-line">Agent: Claude Code. In the product: Foundation Model APIs, Vector Search and Genie. Full part-by-part log in docs/decisions.md.</div>
     </div>
   </section>
 
-  <!-- 11. headline stats -->
+  <!-- 12. section: outcomes -->
+  <section data-pattern="section-divider" data-label="Section: outcomes">
+    <div class="slide dark" style="justify-content:center;">
+      <span class="eyebrow">Section 03</span>
+      <div class="title" style="font-size:64px;margin-top:18px;max-width:900px;">Outcomes and the business case</div>
+    </div>
+  </section>
+
+  <!-- 13. headline stats -->
   <section data-pattern="stats" data-label="Headline outcomes">
     <div class="slide dark">
       <span class="eyebrow">Personalized vs popularity baseline</span>
       <div class="title" style="margin-top:14px;font-size:42px;color:#fff;">Personalization doubles engagement</div>
       <div class="stats" style="margin-top:auto;margin-bottom:40px;">
-        <div class="stat"><span class="num">2x</span><span class="lab">recommendation CTR, 3.1% to 6.1% for returning shoppers</span></div>
-        <div class="stat"><span class="num">+47%</span><span class="lab">session conversion, 1.93% to 2.84% with the champion model</span></div>
-        <div class="stat"><span class="num">2x</span><span class="lab">cold-start conversion, 0.83% to 1.67% for brand-new shoppers</span></div>
+        <div class="stat"><span class="num">2x</span><span class="lab">recommendation CTR, 3.1% to 6.1%, for the VP of Merchandising</span></div>
+        <div class="stat"><span class="num">+47%</span><span class="lab">session conversion, 1.93% to 2.84%, for the VP of E-commerce</span></div>
+        <div class="stat"><span class="num">2x</span><span class="lab">cold-start conversion, 0.83% to 1.67%, for the CMO</span></div>
       </div>
       <div class="footer"><span>Simulated A/B on synthetic data; outcomes drawn from hidden shopper preferences the model never sees</span><span></span></div>
     </div>
   </section>
 
-  <!-- 12. scorecard -->
+  <!-- 14. scorecard -->
   <section data-pattern="comparison-table" data-label="Scorecard">
     <div class="slide">
       <div class="action-kicker">Scorecard against targets</div>
       <div class="action-title" style="margin-top:8px;">Engagement targets are met; AOV and latency are the next focus</div>
       <div class="action-rule"></div>
       <table class="dv-table">
-        <thead><tr><th style="width:28%;">Metric</th><th style="width:18%;">Baseline</th><th style="width:27%;">Personalized</th><th style="width:27%;">Target</th></tr></thead>
+        <thead><tr><th style="width:24%;">Metric</th><th style="width:22%;">Owner</th><th style="width:13%;">Baseline</th><th style="width:21%;">Personalized</th><th style="width:20%;">Target</th></tr></thead>
         <tbody>
-          <tr><td>Recommendation CTR</td><td>3.1%</td><td class="good">6.1%</td><td>at least 6%</td></tr>
-          <tr><td>Session conversion</td><td>1.93%</td><td class="good">2.84% to 3.30%</td><td>at least 2.6%</td></tr>
-          <tr><td>Cold-start conversion</td><td>0.83%</td><td class="good">1.67%</td><td>at least 1.4%</td></tr>
-          <tr><td>Average order value</td><td>$57.92</td><td class="bad">$56.47 to $60.34</td><td>plus 5 to 8%</td></tr>
-          <tr><td>Recommendation latency</td><td>n/a</td><td class="bad">about 112 ms p50</td><td>under 100 ms p95</td></tr>
+          <tr><td>Recommendation CTR</td><td>VP Merchandising</td><td>3.1%</td><td class="good">6.1%</td><td>at least 6%</td></tr>
+          <tr><td>Session conversion</td><td>VP E-commerce</td><td>1.93%</td><td class="good">2.84% to 3.30%</td><td>at least 2.6%</td></tr>
+          <tr><td>Cold-start conversion</td><td>CMO</td><td>0.83%</td><td class="good">1.67%</td><td>at least 1.4%</td></tr>
+          <tr><td>Average order value</td><td>VP E-commerce, CFO</td><td>$57.92</td><td class="bad">$56.47 to $60.34</td><td>plus 5 to 8%</td></tr>
+          <tr><td>Latency</td><td>VP E-commerce</td><td>n/a</td><td class="bad">about 112 ms p50</td><td>under 100 ms p95</td></tr>
         </tbody>
       </table>
       <div class="source-line">Returning shoppers unless noted. Range shows champion to challenger. Offline NDCG@10 rose from 0.072 to 0.121.</div>
     </div>
   </section>
 
-  <!-- 13. get started -->
-  <section data-pattern="code-reference" data-label="Get started">
+  <!-- 15. business case -->
+  <section data-pattern="two-column" data-label="Business case">
+    <div class="slide white">
+      <span class="eyebrow">The business case, for the CFO</span>
+      <div class="title" style="margin-top:14px;font-size:42px;">An expected <span class="em">$4.3M</span> of gross profit a year</div>
+      <div style="display:flex;gap:48px;margin-top:36px;">
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--db-ink-muted);margin-bottom:18px;">Acme Retail assumptions</div>
+          <ul class="bullets">
+            <li>Revenue per session rises $0.41, from $0.95 to $1.36 (measured)</li>
+            <li>5M sessions a month and 35% gross margin (replace with actuals)</li>
+            <li>Only 50% of the simulated lift is banked</li>
+            <li>$750k a year run cost for platform and team</li>
+          </ul>
+        </div>
+        <div style="width:1px;background:var(--db-line);"></div>
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--db-lava);margin-bottom:18px;">Annual value, champion model</div>
+          <ul class="bullets">
+            <li>$12.3M incremental revenue and $4.3M gross profit</li>
+            <li>$3.5M net benefit, a 5.7x return on run cost</li>
+            <li>Payback in about 2 months</li>
+            <li>Low case still pays: $2.1M gross profit, 4.2-month payback</li>
+          </ul>
+        </div>
+      </div>
+      <div class="source-line">Value = revenue-per-session lift x annual sessions x realization x margin, minus run cost. Computed by UC function gold.business_case.</div>
+    </div>
+  </section>
+
+  <!-- 16. get started -->
+  <section data-pattern="code-reference" data-label="The pilot">
     <div class="slide">
-      <span class="eyebrow">Get started</span>
-      <div class="title" style="margin-top:14px;font-size:38px;">One bundle deploy and one setup job</div>
+      <span class="eyebrow">The pilot we propose</span>
+      <div class="title" style="margin-top:14px;font-size:38px;">Two weeks on Acme Retail's own clickstream</div>
       <div style="display:flex;gap:40px;margin-top:32px;align-items:flex-start;">
         <ul class="bullets" style="flex:1;">
-          <li>Everything is a Declarative Automation Bundle on serverless compute</li>
-          <li>Swap the synthetic generator for your own clickstream feed</li>
-          <li>Keep the pipeline, models, Lakebase, Genie, and app as they are</li>
+          <li>Live A/B on a slice of traffic, judged on each owner's own number</li>
+          <li>Replaces the 50% realization assumption with a measured lift</li>
+          <li>Swap the synthetic feed for Acme Retail's events; keep the rest</li>
         </ul>
         <div class="code-card" style="flex:1.2;">
           <span class="cmt"># deploy pipeline, jobs, Lakebase, app</span><br>
@@ -310,12 +374,12 @@
     </div>
   </section>
 
-  <!-- 14. closer -->
+  <!-- 17. closer -->
   <section data-pattern="closer" data-label="Closing">
     <div class="slide dark" style="justify-content:center;align-items:flex-start;">
       <img src="assets/brand/databricks-logo-white.svg" alt="Databricks" style="height:30px;width:auto;margin-bottom:40px;">
       <div class="title" style="font-size:80px;">Thank you</div>
-      <div class="subtitle" style="margin-top:20px;">Next step: a two-week pilot on your own clickstream.</div>
+      <div class="subtitle" style="margin-top:20px;">The ask: approve the two-week Acme Retail pilot, sponsored by the VP of E-commerce.</div>
       <div style="display:flex;align-items:center;gap:14px;margin-top:40px;">
         <div class="accent-bar"></div>
         <span style="font-size:15px;color:#B9C6CB;">databricks.com</span>
