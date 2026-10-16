@@ -1,0 +1,213 @@
+/* ============================================================
+   DATABRICKS DESIGN SYSTEM — colors_and_type.css
+   Source of truth: Databricks Corporate Slide Template (2021+)
+   theme3 brand palette + DM Sans / DM Mono type system.
+   ============================================================ */
+
+/* --- Webfonts ------------------------------------------------
+   DM Sans  = primary brand font ("our new brand font")  [self-hosted]
+   DM Mono  = code / monospace                           [self-hosted]
+
+   NOTE: the upstream template also pulled Barlow (a legacy display
+   accent) from the Google Fonts CDN. That @import is intentionally
+   removed here so a generated deck is fully self-contained / offline
+   with zero external URLs. --font-display therefore falls back to the
+   self-hosted DM Sans, which is on-brand. Do NOT re-add a CDN @import.
+------------------------------------------------------------- */
+
+/* DM Sans — self-hosted */
+@font-face { font-family:'DM Sans'; font-weight:400; font-style:normal; font-display:swap; src:url('fonts/dm-sans-regular.ttf') format('truetype'); }
+@font-face { font-family:'DM Sans'; font-weight:400; font-style:italic;  font-display:swap; src:url('fonts/dm-sans-italic.ttf') format('truetype'); }
+@font-face { font-family:'DM Sans'; font-weight:500; font-style:normal; font-display:swap; src:url('fonts/dm-sans-medium.ttf') format('truetype'); }
+@font-face { font-family:'DM Sans'; font-weight:500; font-style:italic;  font-display:swap; src:url('fonts/dm-sans-medium-italic.ttf') format('truetype'); }
+@font-face { font-family:'DM Sans'; font-weight:700; font-style:normal; font-display:swap; src:url('fonts/dm-sans-bold.ttf') format('truetype'); }
+@font-face { font-family:'DM Sans'; font-weight:700; font-style:italic;  font-display:swap; src:url('fonts/dm-sans-bold-italic.ttf') format('truetype'); }
+
+/* DM Mono — self-hosted */
+@font-face { font-family:'DM Mono'; font-weight:300; font-style:normal; font-display:swap; src:url('fonts/dm-mono-light.ttf') format('truetype'); }
+@font-face { font-family:'DM Mono'; font-weight:300; font-style:italic;  font-display:swap; src:url('fonts/dm-mono-light-italic.ttf') format('truetype'); }
+@font-face { font-family:'DM Mono'; font-weight:400; font-style:normal; font-display:swap; src:url('fonts/dm-mono-regular.ttf') format('truetype'); }
+@font-face { font-family:'DM Mono'; font-weight:400; font-style:italic;  font-display:swap; src:url('fonts/dm-mono-italic.ttf') format('truetype'); }
+@font-face { font-family:'DM Mono'; font-weight:500; font-style:normal; font-display:swap; src:url('fonts/dm-mono-medium.ttf') format('truetype'); }
+@font-face { font-family:'DM Mono'; font-weight:500; font-style:italic;  font-display:swap; src:url('fonts/dm-mono-medium-italic.ttf') format('truetype'); }
+
+:root {
+  /* ============ CORE BRAND COLORS ============ */
+  --db-navy:        #1B3139; /* primary dark — text on light, dark backgrounds */
+  --db-ink-deep:    #0B2026; /* deepest dark — Executive Events backgrounds */
+  --db-navy-700:    #1B5162; /* deep teal-navy accent */
+  --db-lava:        #FF3621; /* iconic Databricks orange/red — primary accent, links */
+  --db-coral:       #FF5F46; /* softer orange — slide accent, product icons */
+  --db-oat-light:   #F9F7F4; /* primary warm background ("warm-gray") */
+  --db-oat-medium:  #EEEDE9; /* secondary warm bg / hairline borders */
+  --db-white:       #FFFFFF;
+
+  /* ============ INK / TEXT ============ */
+  --db-ink:         #3A3838; /* body text — warm near-black (dominant in template) */
+  --db-ink-soft:    #5A5755; /* secondary text */
+  --db-ink-muted:   #8A8580; /* tertiary / captions */
+  --db-black:       #000000;
+
+  /* ============ EXTENDED ACCENTS ============ */
+  --db-green:       #00A972; /* success / positive */
+  --db-green-700:   #00875C;
+  --db-amber:       #FFAB00; /* warning / highlight */
+  --db-gold:        #FCBA33;
+  --db-maroon:      #98102A; /* deep red / error-dark */
+  --db-red:         #BD2B26;
+  --db-slate:       #618794; /* slate blue — charts, muted accent */
+  --db-blue:        #4359FF; /* electric blue — data viz */
+  --db-teal:        #42BA91;
+
+  /* ============ CHART / DATA-VIZ TINTS ============ */
+  --db-tint-coral:  #FF9E94;
+  --db-tint-rose:   #FABFBA;
+  --db-tint-gold:   #FFCC66;
+  --db-tint-amber:  #FFDB96;
+  --db-tint-green:  #9ED6C4;
+  --db-tint-teal:   #70C4AB;
+  --db-tint-mauve:  #BF7080;
+  --db-tint-pink:   #D69EA8;
+
+  /* ============ NEUTRAL / UI GRAYS ============ */
+  --db-gray-100:    #F8F9FA;
+  --db-gray-200:    #EEEDE9;
+  --db-gray-300:    #C4CCD6;
+  --db-gray-400:    #A0ACBE;
+  --db-line:        #E4E2DD; /* warm hairline on oat */
+
+  /* ============ SURFACES ============ */
+  --db-bg:          var(--db-oat-light);
+  --db-surface:     #FFFFFF;
+  --db-surface-alt: var(--db-oat-medium);
+  --db-surface-dark:var(--db-navy);
+
+  /* ============ TYPE FAMILIES ============ */
+  --font-sans:    'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-display: 'Barlow', 'DM Sans', system-ui, sans-serif;
+  --font-mono:    'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* ============ TYPE SCALE ============ (multiples of 8; 12 & 20 in-between) */
+  --fs-12: 12px;
+  --fs-16: 16px;
+  --fs-20: 20px;
+  --fs-24: 24px;
+  --fs-32: 32px;
+  --fs-40: 40px;
+  --fs-56: 56px;
+  --fs-64: 64px;
+
+  /* ============ WEIGHTS ============ */
+  --fw-regular: 400; /* @kind font */
+  --fw-medium:  500; /* @kind font */
+  --fw-bold:    700; /* @kind font */
+
+  /* ============ LINE HEIGHTS ============ */
+  --lh-tight:   1.05; /* @kind font */
+  --lh-snug:    1.2;  /* @kind font */
+  --lh-normal:  1.4;  /* @kind font */
+  --lh-relaxed: 1.6;  /* @kind font */
+
+  /* ============ SPACING (8px base grid) ============ */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+  --sp-8: 64px;
+  --sp-9: 96px;
+
+  /* ============ RADII ============ (Databricks uses minimal rounding) */
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-pill: 999px;
+
+  /* ============ SHADOWS ============ (soft, warm, low-spread) */
+  --shadow-sm: 0 1px 2px rgba(27, 49, 57, 0.06), 0 1px 3px rgba(27, 49, 57, 0.08);
+  --shadow-md: 0 2px 6px rgba(27, 49, 57, 0.08), 0 8px 20px rgba(27, 49, 57, 0.08);
+  --shadow-lg: 0 8px 24px rgba(27, 49, 57, 0.10), 0 24px 48px rgba(27, 49, 57, 0.10);
+}
+
+/* ============================================================
+   SEMANTIC TYPOGRAPHY
+   ============================================================ */
+.db-display {
+  font-family: var(--font-display);
+  font-size: var(--fs-64);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-tight);
+  letter-spacing: -0.02em;
+  color: var(--db-navy);
+}
+.db-h1 {
+  font-family: var(--font-sans);
+  font-size: var(--fs-56);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+  letter-spacing: -0.02em;
+  color: var(--db-navy);
+}
+.db-h2 {
+  font-family: var(--font-sans);
+  font-size: var(--fs-40);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-snug);
+  letter-spacing: -0.015em;
+  color: var(--db-navy);
+}
+.db-h3 {
+  font-family: var(--font-sans);
+  font-size: var(--fs-32);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-snug);
+  letter-spacing: -0.01em;
+  color: var(--db-navy);
+}
+.db-h4 {
+  font-family: var(--font-sans);
+  font-size: var(--fs-24);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-snug);
+  color: var(--db-navy);
+}
+.db-subtitle {
+  font-family: var(--font-sans);
+  font-size: var(--fs-20);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-normal);
+  color: var(--db-ink-soft);
+}
+.db-body {
+  font-family: var(--font-sans);
+  font-size: var(--fs-16);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-relaxed);
+  color: var(--db-ink);
+}
+.db-caption {
+  font-family: var(--font-sans);
+  font-size: var(--fs-12);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-normal);
+  letter-spacing: 0.02em;
+  color: var(--db-ink-muted);
+}
+.db-eyebrow {
+  font-family: var(--font-sans);
+  font-size: var(--fs-12);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-normal);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--db-lava);
+}
+.db-code {
+  font-family: var(--font-mono);
+  font-size: var(--fs-16);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-relaxed);
+  color: var(--db-ink);
+}

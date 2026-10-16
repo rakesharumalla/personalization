@@ -53,8 +53,8 @@
 
   <rect class="box hot" x="210" y="270" width="250" height="150"/>
   <text x="225" y="296" class="t">Lakebase · pers-serving</text>
-  <text x="225" y="318" class="s">synced: user_features_online (continuous)</text>
-  <text x="225" y="334" class="s">synced: product_catalog, precomputed_recs</text>
+  <text x="225" y="318" class="s">synced: user_features_online</text>
+  <text x="225" y="334" class="s">synced: product_catalog, precomputed</text>
   <text x="225" y="356" class="s">native: session_state (last clicks)</text>
   <text x="225" y="372" class="s">native: recommendation_log</text>
   <text x="225" y="388" class="s">native: explanation_cache</text>
@@ -89,7 +89,7 @@
   <path class="ld" d="M210,500 C 120,500 120,380 208,360"/>
   <text x="40" y="440" class="s">clicks → session_state</text>
   <text x="40" y="456" class="s">impressions → rec log</text>
-  <path class="l" d="M1000,345 C 1100,345 1100,140 1002,140"/>
-  <text x="1040" y="250" class="s">rec log</text>
-  <text x="1040" y="266" class="s">→ UC</text>
+  <path class="l" d="M1000,345 C 1080,345 1080,140 1002,140"/>
+  <text x="1012" y="250" class="s">rec log</text>
+  <text x="1012" y="266" class="s">to UC</text>
 </svg>

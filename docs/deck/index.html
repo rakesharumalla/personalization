@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Real-time personalization on Databricks</title>
+<link rel="stylesheet" href="colors_and_type.css">
+<style>
+  html,body{margin:0;background:#0e1a1f;}
+  deck-stage:not(:defined){visibility:hidden}
+  /* ---- slide base ---- */
+  section{font-family:var(--font-sans);color:var(--db-ink);background:var(--db-oat-light);overflow:hidden;}
+  .slide{position:absolute;inset:0;padding:72px 88px;display:flex;flex-direction:column;}
+  .slide.dark{background:var(--db-navy);color:#F4F1ED;}
+  .slide.ink{background:var(--db-ink-deep);color:#F4F1ED;}
+  .slide.white{background:#fff;}
+  .slide.coral{background:var(--db-coral);color:#fff;}
+
+  /* ---- shared chrome ---- */
+  .eyebrow{font-size:14px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--db-lava);}
+  .dark .eyebrow,.ink .eyebrow,.coral .eyebrow{color:#FFC9BF;}
+  .title{font-size:56px;font-weight:700;line-height:1.04;letter-spacing:-.02em;color:var(--db-navy);}
+  .dark .title,.ink .title,.coral .title{color:#fff;}
+  .title .em{color:var(--db-lava);font-style:italic;}
+  .dark .title .em,.ink .title .em{color:var(--db-coral);}
+  .subtitle{font-size:22px;font-weight:400;line-height:1.4;color:var(--db-ink-soft);}
+  .dark .subtitle,.ink .subtitle{color:#B9C6CB;}
+  .body{font-size:18px;line-height:1.6;color:var(--db-ink);}
+  .footer{position:absolute;left:88px;right:88px;bottom:40px;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--db-ink-muted);}
+  .dark .footer,.ink .footer{color:#7E9098;}
+  .accent-bar{width:64px;height:6px;background:var(--db-lava);border-radius:3px;}
+  .logo-tl{height:30px;width:auto;align-self:flex-start;}
+
+  /* ---- bullets (coral square markers) ---- */
+  ul.bullets{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px;}
+  ul.bullets li{position:relative;padding-left:26px;font-size:18px;line-height:1.45;color:var(--db-ink);}
+  ul.bullets li::before{content:"";position:absolute;left:0;top:9px;width:9px;height:9px;border-radius:2px;background:var(--db-coral);}
+  .dark ul.bullets li,.ink ul.bullets li{color:#D9E1E4;}
+
+  /* ---- numbered agenda / list rows ---- */
+  .rows{display:flex;flex-direction:column;gap:0;max-width:820px;}
+  .rows .r{display:flex;gap:24px;align-items:baseline;padding:20px 0;border-bottom:1px solid var(--db-line);}
+  .rows .r:last-child{border-bottom:0;}
+  .rows .rn{font-family:var(--font-mono);font-size:20px;color:var(--db-coral);width:44px;flex:none;}
+  .rows .rt{font-size:24px;font-weight:500;color:var(--db-navy);}
+  .dark .rows .r,.ink .rows .r{border-color:rgba(255,255,255,.14);}
+  .dark .rows .rt,.ink .rows .rt{color:#fff;}
+
+  /* ---- cards (3-up) ---- */
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:44px;}
+  .card{background:#fff;border-radius:14px;box-shadow:var(--shadow-md);padding:30px;display:flex;flex-direction:column;gap:12px;}
+  .card .pico{width:52px;height:52px;border-radius:12px;background:var(--db-oat-medium);display:flex;align-items:center;justify-content:center;}
+  .card .pico span{width:20px;height:20px;border-radius:5px;background:var(--db-coral);}
+  .card .ct{font-size:24px;font-weight:700;color:var(--db-navy);}
+  .card .cb{font-size:16px;line-height:1.5;color:var(--db-ink-soft);}
+
+  /* ---- stats (big numbers) ---- */
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;}
+  .stat{display:flex;flex-direction:column;gap:6px;}
+  .stat .num{font-size:88px;font-weight:700;letter-spacing:-.03em;color:var(--db-lava);line-height:1;}
+  .stat .lab{font-size:18px;color:#B9C6CB;max-width:300px;line-height:1.4;}
+  .slide:not(.dark):not(.ink) .stat .lab{color:var(--db-ink-soft);}
+
+  /* ---- action title (kicker + full-sentence takeaway + coral-tipped rule) ---- */
+  .action-kicker{font-size:14px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--db-lava);}
+  .action-title{font-size:34px;font-weight:700;line-height:1.18;letter-spacing:-.015em;color:var(--db-navy);max-width:1040px;}
+  .action-title .em{color:var(--db-lava);font-style:italic;}
+  .action-rule{height:3px;width:100%;background:var(--db-oat-medium);margin:20px 0 28px;position:relative;}
+  .action-rule::before{content:"";position:absolute;left:0;top:0;height:3px;width:88px;background:var(--db-lava);}
+  .source-line{position:absolute;left:88px;bottom:30px;font-size:12px;font-style:italic;color:var(--db-ink-muted);}
+
+  /* ---- executive summary (numbered takeaways) ---- */
+  .exsum{display:flex;flex-direction:column;gap:0;margin-top:8px;}
+  .exsum .item{display:grid;grid-template-columns:56px 1fr;gap:22px;padding:20px 0;border-bottom:1px solid var(--db-line);align-items:start;}
+  .exsum .item:last-child{border-bottom:0;}
+  .exsum .n{font-family:var(--font-mono);font-size:24px;font-weight:500;color:var(--db-lava);line-height:1.2;}
+  .exsum .h{font-size:21px;font-weight:700;color:var(--db-navy);margin-bottom:3px;}
+  .exsum .d{font-size:16px;line-height:1.45;color:var(--db-ink-soft);}
+
+  /* ---- insight callout (navy "so what" box) ---- */
+  .insight{background:var(--db-navy);color:#F4F1ED;border-radius:12px;padding:24px 26px;display:flex;flex-direction:column;gap:10px;}
+  .insight .ih{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--db-coral);}
+  .insight .it{font-size:20px;font-weight:600;line-height:1.35;}
+
+  /* ---- comparison table (coral header, banded rows, mono numerals) ---- */
+  .dv-table{border-collapse:collapse;width:100%;font-family:var(--font-sans);}
+  .dv-table th{background:var(--db-coral);color:#fff;font-weight:700;text-align:left;padding:14px 20px;font-size:16px;letter-spacing:.01em;}
+  .dv-table th:first-child{border-top-left-radius:8px;}
+  .dv-table th:last-child{border-top-right-radius:8px;}
+  .dv-table td{padding:14px 20px;font-size:17px;color:var(--db-ink);line-height:1.4;vertical-align:top;}
+  .dv-table tbody tr:nth-child(odd){background:#fff;}
+  .dv-table tbody tr:nth-child(even){background:#F3F3F3;}
+  .dv-table tbody tr td:first-child{font-weight:700;color:var(--db-navy);}
+  .dv-table .good{color:var(--db-green-700);font-weight:600;}
+  .dv-table .bad{color:var(--db-maroon);font-weight:600;}
+
+  /* ---- four-step flow (numbered chips + coral arrows) ---- */
+  .stepflow{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:12px;align-items:stretch;}
+  .step{padding:0 22px;display:flex;flex-direction:column;gap:12px;position:relative;}
+  .step .sn{width:44px;height:44px;border-radius:50%;color:#fff;font-family:var(--font-mono);font-size:20px;display:flex;align-items:center;justify-content:center;background:var(--db-navy);}
+  .step:nth-child(2) .sn{background:var(--db-lava);}
+  .step:nth-child(3) .sn{background:var(--db-navy-700);}
+  .step:nth-child(4) .sn{background:var(--db-green);}
+  .step .sh{font-size:19px;font-weight:700;color:var(--db-navy);line-height:1.2;}
+  .step .sd{font-size:16px;line-height:1.45;color:var(--db-ink-soft);}
+  .step:not(:last-child)::after{content:"\2192";position:absolute;right:-9px;top:10px;color:var(--db-coral);font-size:22px;font-weight:700;}
+
+  /* ---- code / endpoint panel (DM Mono) ---- */
+  .code-card{background:var(--db-navy);border-radius:12px;padding:24px 28px;font-family:var(--font-mono);color:#E8EEF0;font-size:16px;line-height:1.75;box-shadow:var(--shadow-md);}
+  .code-card .cmt{color:#7E9098;}
+  .code-card .acc{color:var(--db-coral);}
+  .code-card .kw{color:#9ED6C4;}
+
+</style>
+</head>
+<body>
+<deck-stage width="1280" height="720">
+
+  <!-- 1. cover -->
+  <section data-pattern="cover" data-label="Cover">
+    <div class="slide dark">
+      <img src="assets/brand/databricks-logo-white.svg" alt="Databricks" class="logo-tl">
+      <div style="display:flex;align-items:center;gap:14px;margin-top:40px;">
+        <div class="accent-bar"></div>
+        <span class="eyebrow">Digital native commerce</span>
+      </div>
+      <div style="margin-top:auto;max-width:820px;">
+        <div class="title" style="font-size:72px;">Real-time personalization on Databricks</div>
+        <div class="subtitle" style="margin-top:24px;">The right product for every shopper within about 100 ms of a click, governed, explained, and measured on one platform.</div>
+      </div>
+      <img src="assets/brand/illustration-nodal-02.svg" style="position:absolute;right:64px;top:90px;height:300px;opacity:.95;" alt="">
+      <div class="footer"><span>Databricks</span><span>2026</span></div>
+    </div>
+  </section>
+
+  <!-- 2. agenda -->
+  <section data-pattern="agenda" data-label="Agenda">
+    <div class="slide">
+      <span class="eyebrow">Agenda</span>
+      <div class="title" style="margin-top:14px;font-size:44px;">From the problem to a pilot plan</div>
+      <div class="rows" style="margin-top:48px;">
+        <div class="r"><span class="rn">01</span><span class="rt">The business challenge</span></div>
+        <div class="r"><span class="rn">02</span><span class="rt">The Databricks solution and architecture</span></div>
+        <div class="r"><span class="rn">03</span><span class="rt">Outcomes from the A/B experiment</span></div>
+        <div class="r"><span class="rn">04</span><span class="rt">How to get started</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. business challenge -->
+  <section data-pattern="content-bullets" data-label="Business challenge">
+    <div class="slide">
+      <span class="eyebrow">The business challenge</span>
+      <div class="title" style="margin-top:14px;font-size:42px;">Paid traffic lands on a <span class="em">generic</span> store</div>
+      <div class="subtitle" style="margin-top:12px;">A first-time visitor and a loyal repeat buyer see the same homepage, rails, and offers.</div>
+      <div style="display:flex;gap:56px;margin-top:40px;align-items:flex-start;">
+        <ul class="bullets" style="flex:1;">
+          <li>Low session-to-purchase conversion and high bounce on landing pages</li>
+          <li>About 30% of sessions are cold start, with no history to personalize on</li>
+          <li>Merchandisers can't see why a product was shown, or whether it worked</li>
+          <li>Personalization logic lives in app code, away from the analytics the business trusts</li>
+        </ul>
+        <img src="assets/brand/illustration-nodal-05.svg" style="width:300px;height:auto;" alt="">
+      </div>
+      <div class="footer"><span>Databricks</span><span>Real-time personalization</span></div>
+    </div>
+  </section>
+
+  <!-- 4. why it's hard today -->
+  <section data-pattern="comparison-table" data-label="Stitched stack vs platform">
+    <div class="slide">
+      <div class="action-kicker">Why it is hard today</div>
+      <div class="action-title" style="margin-top:8px;">A stitched stack makes every step a hand-off</div>
+      <div class="action-rule"></div>
+      <table class="dv-table">
+        <thead><tr><th style="width:20%;">Need</th><th style="width:40%;">Stitched stack</th><th style="width:40%;">Databricks</th></tr></thead>
+        <tbody>
+          <tr><td>Fresh signals</td><td class="bad">Nightly batch features</td><td class="good">Last 5 clicks read from Lakebase per request</td></tr>
+          <tr><td>Serving data</td><td class="bad">Separate database, custom ETL</td><td class="good">Gold tables synced to Lakebase automatically</td></tr>
+          <tr><td>Governance</td><td class="bad">Rules re-built per system</td><td class="good">Unity Catalog masks, filters, lineage</td></tr>
+          <tr><td>Explainability</td><td class="bad">None for the business</td><td class="good">Grounded "why this?" for every recommendation</td></tr>
+          <tr><td>Insight</td><td class="bad">Analyst ticket, hours</td><td class="good">Genie and a copilot, seconds</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 5. section: solution -->
+  <section data-pattern="section-divider" data-label="Section: solution">
+    <div class="slide dark" style="justify-content:center;">
+      <span class="eyebrow">Section 02</span>
+      <div class="title" style="font-size:64px;margin-top:18px;max-width:900px;">The Databricks solution, from click to recommendation</div>
+      <img src="assets/brand/unity-catalog-lockup-full-color-white.svg" style="height:40px;width:auto;align-self:flex-start;margin-top:36px;" alt="Unity Catalog">
+    </div>
+  </section>
+
+  <!-- 6. three capabilities -->
+  <section data-pattern="three-card" data-label="Three capabilities">
+    <div class="slide">
+      <span class="eyebrow">The solution</span>
+      <div class="title" style="margin-top:14px;font-size:42px;">Three capabilities on one governed platform</div>
+      <div class="cards">
+        <div class="card"><div class="pico"><span></span></div><div class="ct">Real-time signal</div><div class="cb">Lakeflow streams clickstream into governed tables. Lakebase serves features and live session state in milliseconds.</div></div>
+        <div class="card"><div class="pico"><span></span></div><div class="ct">Intelligence</div><div class="cb">A two-stage recommender on Model Serving, Vector Search for cold start, and grounded LLM explanations.</div></div>
+        <div class="card"><div class="pico"><span></span></div><div class="ct">Business loop</div><div class="cb">An A/B experiment, a Genie space, and a merchandiser copilot that simulates campaigns.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. architecture -->
+  <section data-pattern="content-bullets" data-label="Architecture">
+    <div class="slide" style="padding:48px 88px 40px;">
+      <span class="eyebrow">Architecture</span>
+      <div class="title" style="margin-top:10px;font-size:36px;">Every stage consumes the previous stage's output</div>
+      <img src="assets/brand/architecture.svg" alt="Architecture: synthetic stream, Lakeflow, Unity Catalog, features and ML, experiment, Lakebase, Mosaic AI, Genie, Databricks App" style="width:1104px;height:auto;margin-top:18px;border-radius:8px;box-shadow:var(--shadow-md);">
+    </div>
+  </section>
+
+  <!-- 8. request path -->
+  <section data-pattern="four-step" data-label="Request path">
+    <div class="slide">
+      <div class="action-kicker">How it works</div>
+      <div class="action-title" style="margin-top:8px;">Four steps turn a click into the next recommendation</div>
+      <div class="action-rule"></div>
+      <div class="stepflow">
+        <div class="step"><div class="sn">1</div><div class="sh">Capture the click</div><div class="sd">The app writes each view, add-to-cart, and purchase to Lakebase session state.</div></div>
+        <div class="step"><div class="sn">2</div><div class="sh">Look up context</div><div class="sd">User features and the last 5 clicks come back from Lakebase in about 5 ms.</div></div>
+        <div class="step"><div class="sn">3</div><div class="sh">Rank candidates</div><div class="sd">ALS and embedding candidates are ranked by LightGBM on Model Serving.</div></div>
+        <div class="step"><div class="sn">4</div><div class="sh">Explain and log</div><div class="sd">Claude writes a grounded "why this?" and every impression is logged for attribution.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. enterprise-ready -->
+  <section data-pattern="exec-summary" data-label="Enterprise-ready">
+    <div class="slide">
+      <div class="action-kicker">Built for production</div>
+      <div class="action-title" style="margin-top:8px;">Governed, resilient, and explainable by design</div>
+      <div class="action-rule"></div>
+      <div class="exsum">
+        <div class="item"><div class="n">01</div><div><div class="h">Governed end to end</div><div class="d">Email masked and tagged as PII, regional row filters, and lineage from landing volume to served model in Unity Catalog.</div></div></div>
+        <div class="item"><div class="n">02</div><div><div class="h">Resilient serving</div><div class="d">If Model Serving is slow, precomputed recommendations in Lakebase fill the rail, so shoppers never see an empty page.</div></div></div>
+        <div class="item"><div class="n">03</div><div><div class="h">Explainable and measured</div><div class="d">Champion and challenger models in Unity Catalog, an A/B readout, and a copilot scored 20 of 20 on grounded answers.</div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10. section: outcomes -->
+  <section data-pattern="section-divider" data-label="Section: outcomes">
+    <div class="slide dark" style="justify-content:center;">
+      <span class="eyebrow">Section 03</span>
+      <div class="title" style="font-size:64px;margin-top:18px;max-width:900px;">Outcomes from a 14-day A/B experiment</div>
+    </div>
+  </section>
+
+  <!-- 11. headline stats -->
+  <section data-pattern="stats" data-label="Headline outcomes">
+    <div class="slide dark">
+      <span class="eyebrow">Personalized vs popularity baseline</span>
+      <div class="title" style="margin-top:14px;font-size:42px;color:#fff;">Personalization doubles engagement</div>
+      <div class="stats" style="margin-top:auto;margin-bottom:40px;">
+        <div class="stat"><span class="num">2x</span><span class="lab">recommendation CTR, 3.1% to 6.1% for returning shoppers</span></div>
+        <div class="stat"><span class="num">+47%</span><span class="lab">session conversion, 1.93% to 2.84% with the champion model</span></div>
+        <div class="stat"><span class="num">2x</span><span class="lab">cold-start conversion, 0.83% to 1.67% for brand-new shoppers</span></div>
+      </div>
+      <div class="footer"><span>Simulated A/B on synthetic data; outcomes drawn from hidden shopper preferences the model never sees</span><span></span></div>
+    </div>
+  </section>
+
+  <!-- 12. scorecard -->
+  <section data-pattern="comparison-table" data-label="Scorecard">
+    <div class="slide">
+      <div class="action-kicker">Scorecard against targets</div>
+      <div class="action-title" style="margin-top:8px;">Engagement targets are met; AOV and latency are the next focus</div>
+      <div class="action-rule"></div>
+      <table class="dv-table">
+        <thead><tr><th style="width:28%;">Metric</th><th style="width:18%;">Baseline</th><th style="width:27%;">Personalized</th><th style="width:27%;">Target</th></tr></thead>
+        <tbody>
+          <tr><td>Recommendation CTR</td><td>3.1%</td><td class="good">6.1%</td><td>at least 6%</td></tr>
+          <tr><td>Session conversion</td><td>1.93%</td><td class="good">2.84% to 3.30%</td><td>at least 2.6%</td></tr>
+          <tr><td>Cold-start conversion</td><td>0.83%</td><td class="good">1.67%</td><td>at least 1.4%</td></tr>
+          <tr><td>Average order value</td><td>$57.92</td><td class="bad">$56.47 to $60.34</td><td>plus 5 to 8%</td></tr>
+          <tr><td>Recommendation latency</td><td>n/a</td><td class="bad">about 112 ms p50</td><td>under 100 ms p95</td></tr>
+        </tbody>
+      </table>
+      <div class="source-line">Returning shoppers unless noted. Range shows champion to challenger. Offline NDCG@10 rose from 0.072 to 0.121.</div>
+    </div>
+  </section>
+
+  <!-- 13. get started -->
+  <section data-pattern="code-reference" data-label="Get started">
+    <div class="slide">
+      <span class="eyebrow">Get started</span>
+      <div class="title" style="margin-top:14px;font-size:38px;">One bundle deploy and one setup job</div>
+      <div style="display:flex;gap:40px;margin-top:32px;align-items:flex-start;">
+        <ul class="bullets" style="flex:1;">
+          <li>Everything is a Declarative Automation Bundle on serverless compute</li>
+          <li>Swap the synthetic generator for your own clickstream feed</li>
+          <li>Keep the pipeline, models, Lakebase, Genie, and app as they are</li>
+        </ul>
+        <div class="code-card" style="flex:1.2;">
+          <span class="cmt"># deploy pipeline, jobs, Lakebase, app</span><br>
+          databricks bundle <span class="kw">deploy</span><br>
+          <br>
+          <span class="cmt"># data, features, models, serving, Genie</span><br>
+          databricks bundle run <span class="acc">pers_setup</span><br>
+          databricks bundle run <span class="acc">pers_app</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 14. closer -->
+  <section data-pattern="closer" data-label="Closing">
+    <div class="slide dark" style="justify-content:center;align-items:flex-start;">
+      <img src="assets/brand/databricks-logo-white.svg" alt="Databricks" style="height:30px;width:auto;margin-bottom:40px;">
+      <div class="title" style="font-size:80px;">Thank you</div>
+      <div class="subtitle" style="margin-top:20px;">Next step: a two-week pilot on your own clickstream.</div>
+      <div style="display:flex;align-items:center;gap:14px;margin-top:40px;">
+        <div class="accent-bar"></div>
+        <span style="font-size:15px;color:#B9C6CB;">databricks.com</span>
+      </div>
+    </div>
+  </section>
+
+</deck-stage>
+<script src="deck-stage.js"></script>
+</body>
+</html>

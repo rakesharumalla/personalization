@@ -7,6 +7,7 @@ platform: no separate ML stack, serving database, or BI tool.
 - Spec: [`docs/spec.md`](docs/spec.md)
 - Trade-off log: [`docs/decisions.md`](docs/decisions.md)
 - The four narrative answers: [`docs/about.md`](docs/about.md)
+- **Customer slide deck:** [`docs/deck/index.html`](docs/deck/index.html) (PDF: [`docs/personalization-deck.pdf`](docs/personalization-deck.pdf))
 - **Customer demo script:** [`docs/demo.md`](docs/demo.md)
 - **Review notebook:** [`notebooks/review.py`](notebooks/review.py) (run it as the `pers-review` job)
 
