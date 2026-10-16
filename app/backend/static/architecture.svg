@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" font-family="DM Sans, Inter, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1B3139"/>
+    </marker>
+    <style>
+      .box { fill:#fff; stroke:#1B3139; stroke-width:1.5; rx:10; }
+      .hot { fill:#FFF1EE; stroke:#FF3621; stroke-width:2; }
+      .t { font-size:15px; font-weight:700; fill:#1B3139; }
+      .s { font-size:12px; fill:#475569; }
+      .l { stroke:#1B3139; stroke-width:1.6; fill:none; marker-end:url(#a); }
+      .ld { stroke:#FF3621; stroke-width:1.8; fill:none; marker-end:url(#a); stroke-dasharray:5 4; }
+      .band { fill:#F1F5F9; }
+    </style>
+  </defs>
+  <rect x="0" y="0" width="1200" height="560" fill="#F7F7F5"/>
+  <rect class="band" x="190" y="18" width="830" height="200" rx="14"/>
+  <text x="205" y="40" class="s" font-weight="700">UNITY CATALOG · fevm_catalog_ra_test (governance, tags, masks, lineage)</text>
+
+  <rect class="box" x="20" y="80" width="150" height="90"/>
+  <text x="35" y="108" class="t">Synthetic stream</text>
+  <text x="35" y="128" class="s">data_gen · ~50 ev/s</text>
+  <text x="35" y="146" class="s">JSON → UC Volume</text>
+  <text x="35" y="162" class="s">raw_landing</text>
+
+  <rect class="box" x="210" y="60" width="250" height="140"/>
+  <text x="225" y="86" class="t">Lakeflow Declarative Pipeline</text>
+  <text x="225" y="108" class="s">bronze: Auto Loader, _rescued_data</text>
+  <text x="225" y="126" class="s">silver: expectations, dedupe, quarantine,</text>
+  <text x="225" y="142" class="s">  SCD2 users (AUTO CDC) + email MASK,</text>
+  <text x="225" y="158" class="s">  region ROW FILTER, sessions</text>
+  <text x="225" y="176" class="s">gold MVs: KPIs, product perf, session ctx</text>
+
+  <rect class="box" x="490" y="60" width="240" height="140"/>
+  <text x="505" y="86" class="t">Features &amp; ML</text>
+  <text x="505" y="108" class="s">gold.user_features / product_features</text>
+  <text x="505" y="124" class="s">  (PK feature tables, CDF, MERGE)</text>
+  <text x="505" y="142" class="s">implicit ALS + gte-large neighbours</text>
+  <text x="505" y="158" class="s">LightGBM LambdaRank (MLflow)</text>
+  <text x="505" y="176" class="s">ml.recommender @champion/@challenger</text>
+
+  <rect class="box" x="760" y="60" width="240" height="140"/>
+  <text x="775" y="86" class="t">Experiment &amp; KPIs</text>
+  <text x="775" y="108" class="s">simulated A/B: popularity vs</text>
+  <text x="775" y="124" class="s">  champion / challenger</text>
+  <text x="775" y="142" class="s">gold.recommendation_outcomes</text>
+  <text x="775" y="158" class="s">gold.experiment_results</text>
+  <text x="775" y="176" class="s">UC fn gold.simulate_campaign</text>
+
+  <path class="l" d="M170,125 L208,125"/>
+  <path class="l" d="M460,130 L488,130"/>
+  <path class="l" d="M730,130 L758,130"/>
+
+  <rect class="box hot" x="210" y="270" width="250" height="150"/>
+  <text x="225" y="296" class="t">Lakebase · pers-serving</text>
+  <text x="225" y="318" class="s">synced: user_features_online (continuous)</text>
+  <text x="225" y="334" class="s">synced: product_catalog, precomputed_recs</text>
+  <text x="225" y="356" class="s">native: session_state (last clicks)</text>
+  <text x="225" y="372" class="s">native: recommendation_log</text>
+  <text x="225" y="388" class="s">native: explanation_cache</text>
+  <text x="225" y="408" class="s">feature lookup + catalog &lt; 20 ms</text>
+
+  <rect class="box hot" x="490" y="270" width="240" height="150"/>
+  <text x="505" y="296" class="t">Mosaic AI</text>
+  <text x="505" y="318" class="s">Model Serving: pers-recommender</text>
+  <text x="505" y="334" class="s">  + inference tables (AI Gateway)</text>
+  <text x="505" y="356" class="s">Vector Search: gold.product_index</text>
+  <text x="505" y="378" class="s">FMAPI: Claude Haiku (why this?)</text>
+  <text x="505" y="394" class="s">FMAPI: Claude Sonnet (copilot)</text>
+
+  <rect class="box hot" x="760" y="270" width="240" height="150"/>
+  <text x="775" y="296" class="t">Genie</text>
+  <text x="775" y="318" class="s">Personalization Insights space</text>
+  <text x="775" y="334" class="s">metric definitions, synonyms,</text>
+  <text x="775" y="350" class="s">trusted SQL, sample questions</text>
+  <text x="775" y="372" class="s">Conversation API from the app</text>
+
+  <path class="l" d="M600,200 L330,268"/>
+  <path class="l" d="M610,200 L610,268"/>
+  <path class="l" d="M880,200 L880,268"/>
+
+  <rect class="box" x="210" y="460" width="790" height="80" style="stroke:#FF3621;stroke-width:2.5"/>
+  <text x="225" y="488" class="t">Databricks App · pers-personalization (React + FastAPI, service principal, UC-governed)</text>
+  <text x="225" y="510" class="s">Storefront Simulator (recs + latency badge + why-this + non-personalized side-by-side) · Business Console (lift, segments,</text>
+  <text x="225" y="526" class="s">champion vs challenger, data quality, freshness) · Ask the Data (Genie + Merchandiser Copilot) · About This Build</text>
+  <path class="ld" d="M335,458 L335,422"/>
+  <path class="ld" d="M610,458 L610,422"/>
+  <path class="ld" d="M880,458 L880,422"/>
+  <path class="ld" d="M210,500 C 120,500 120,380 208,360"/>
+  <text x="40" y="440" class="s">clicks → session_state</text>
+  <text x="40" y="456" class="s">impressions → rec log</text>
+  <path class="l" d="M1000,345 C 1100,345 1100,140 1002,140"/>
+  <text x="1040" y="250" class="s">rec log</text>
+  <text x="1040" y="266" class="s">→ UC</text>
+</svg>

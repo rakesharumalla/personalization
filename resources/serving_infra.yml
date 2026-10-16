@@ -1,0 +1,15 @@
+resources:
+  # Lakebase Autoscaling project serving the app hot path (production branch + primary endpoint auto-created)
+  postgres_projects:
+    pers_serving:
+      project_id: ${var.lakebase_project}
+      display_name: Personalization serving
+      pg_version: 17
+      default_endpoint_settings:
+        autoscaling_limit_min_cu: 0.5
+        autoscaling_limit_max_cu: 4
+
+  vector_search_endpoints:
+    pers_vs:
+      name: ${var.vs_endpoint}
+      endpoint_type: STANDARD

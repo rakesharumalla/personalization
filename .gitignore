@@ -1,0 +1,36 @@
+# --- secrets & local config -------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+.databrickscfg
+**/secrets/
+
+# --- Databricks bundle state ------------------------------------------------
+.databricks/
+.bundle/
+
+# --- Python -----------------------------------------------------------------
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+mlruns/
+
+# --- Node / frontend --------------------------------------------------------
+node_modules/
+app/frontend/dist/
+npm-debug.log*
+
+# --- OS / editors -----------------------------------------------------------
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.log

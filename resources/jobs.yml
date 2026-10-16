@@ -1,0 +1,206 @@
+x-args: &args
+  - --root
+  - ${workspace.file_path}
+  - --catalog
+  - ${var.catalog}
+
+x-envs: &envs
+  - environment_key: base
+    spec:
+      environment_version: "4"
+      dependencies:
+        - databricks-sdk>=0.150.0
+        - psycopg[binary]>=3.2
+        - numpy>=1.26
+  - environment_key: ml
+    spec:
+      environment_version: "4"
+      dependencies:
+        - databricks-sdk>=0.150.0
+        - mlflow>=3.1
+        - lightgbm==4.6.0
+        - scipy>=1.11
+        - pyarrow>=14
+
+resources:
+  jobs:
+    # ------------------------------------------------------------------ one-time setup (fresh workspace)
+    pers_setup:
+      name: pers-setup
+      description: >-
+        End-to-end bootstrap: UC governance -> synthetic backfill -> Lakeflow pipeline -> features ->
+        train/register -> serving + vector search + batch recs -> A/B simulation -> Lakebase sync ->
+        Genie space -> app grants.
+      max_concurrent_runs: 1
+      environments: *envs
+      tasks:
+        - task_key: uc_pre
+          environment_key: base
+          spark_python_task: {python_file: ../governance/setup_uc.py, parameters: [--root, "${workspace.file_path}", --catalog, "${var.catalog}", --stage, pre]}
+        - task_key: generate_backfill
+          depends_on: [{task_key: uc_pre}]
+          environment_key: base
+          spark_python_task: {python_file: ../data_gen/generate.py, parameters: [--root, "${workspace.file_path}", --catalog, "${var.catalog}", --mode, backfill]}
+        - task_key: pipeline
+          depends_on: [{task_key: generate_backfill}]
+          pipeline_task: {pipeline_id: "${resources.pipelines.pers_pipeline.id}", full_refresh: true}
+        - task_key: build_features
+          depends_on: [{task_key: pipeline}]
+          environment_key: base
+          spark_python_task: {python_file: ../features/build_features.py, parameters: *args}
+        - task_key: train
+          depends_on: [{task_key: build_features}]
+          environment_key: ml
+          spark_python_task: {python_file: ../ml/train.py, parameters: *args}
+        - task_key: deploy_serving
+          depends_on: [{task_key: train}]
+          environment_key: base
+          spark_python_task: {python_file: ../ml/deploy_serving.py, parameters: [--root, "${workspace.file_path}", --catalog, "${var.catalog}", --endpoint, "${var.serving_endpoint}", --scale_to_zero, "${var.serving_scale_to_zero}"]}
+        - task_key: batch_inference
+          depends_on: [{task_key: train}]
+          environment_key: ml
+          spark_python_task: {python_file: ../ml/batch_inference.py, parameters: *args}
+        - task_key: vector_search
+          depends_on: [{task_key: build_features}]
+          environment_key: base
+          spark_python_task: {python_file: ../genai/vector_search_setup.py, parameters: [--root, "${workspace.file_path}", --catalog, "${var.catalog}", --endpoint, "${var.vs_endpoint}"]}
+        - task_key: simulate_experiment
+          depends_on: [{task_key: train}]
+          environment_key: ml
+          spark_python_task: {python_file: ../experiments/simulate_ab.py, parameters: *args}
+        - task_key: uc_functions
+          depends_on: [{task_key: simulate_experiment}]
+          environment_key: base
+          spark_python_task: {python_file: ../genai/uc_functions.py, parameters: *args}
+        - task_key: lakebase_sync
+          depends_on: [{task_key: batch_inference}]
+          environment_key: base
+          spark_python_task: {python_file: ../lakebase/setup_lakebase.py, parameters: [--root, "${workspace.file_path}", --catalog, "${var.catalog}", --project, "${var.lakebase_project}", --lakebase_catalog, "${var.lakebase_catalog}", --app, "${var.app_name}"]}
+        - task_key: genie_space
+          depends_on: [{task_key: uc_functions}]
+          environment_key: base
+          spark_python_task: {python_file: ../genie/create_space.py, parameters: [--root, "${workspace.file_path}", --catalog, "${var.catalog}", --warehouse_id, "${var.warehouse_id}", --title, "${var.genie_space_title}"]}
+        - task_key: uc_post
+          depends_on: [{task_key: simulate_experiment}, {task_key: batch_inference}]
+          environment_key: base
+          spark_python_task: {python_file: ../governance/setup_uc.py, parameters: [--root, "${workspace.file_path}", --catalog, "${var.catalog}", --stage, post]}
+        - task_key: app_grants
+          depends_on: [{task_key: deploy_serving}, {task_key: vector_search}, {task_key: genie_space}, {task_key: lakebase_sync}, {task_key: uc_post}]
+          environment_key: base
+          spark_python_task: {python_file: ../scripts/grant_app.py, parameters: [--root, "${workspace.file_path}", --catalog, "${var.catalog}", --app, "${var.app_name}", --serving_endpoint, "${var.serving_endpoint}", --vs_endpoint, "${var.vs_endpoint}", --genie_title, "${var.genie_space_title}"]}
+
+    # ------------------------------------------------------------------ live event stream (demo window)
+    pers_stream:
+      name: pers-event-stream
+      description: Streams synthetic clickstream/orders/user CDC into the landing volume (~50 events/s).
+      environments: *envs
+      parameters:
+        - {name: minutes, default: "30"}
+        - {name: rate, default: "50"}
+      tasks:
+        - task_key: stream
+          environment_key: base
+          spark_python_task:
+            python_file: ../data_gen/generate.py
+            parameters: [--root, "${workspace.file_path}", --catalog, "${var.catalog}", --mode, stream, --minutes, "{{job.parameters.minutes}}", --rate, "{{job.parameters.rate}}"]
+
+    # ------------------------------------------------------------------ hourly refresh
+    pers_refresh:
+      name: pers-refresh
+      description: Pipeline -> feature refresh -> Lakebase sync -> recommendation_log export.
+      max_concurrent_runs: 1
+      environments: *envs
+      schedule:
+        quartz_cron_expression: "0 0 * * * ?"
+        timezone_id: UTC
+        pause_status: PAUSED
+      tasks:
+        - task_key: pipeline
+          pipeline_task: {pipeline_id: "${resources.pipelines.pers_pipeline.id}"}
+        - task_key: build_features
+          depends_on: [{task_key: pipeline}]
+          environment_key: base
+          spark_python_task: {python_file: ../features/build_features.py, parameters: *args}
+        - task_key: lakebase_sync
+          depends_on: [{task_key: build_features}]
+          environment_key: base
+          spark_python_task: {python_file: ../lakebase/setup_lakebase.py, parameters: [--root, "${workspace.file_path}", --catalog, "${var.catalog}", --project, "${var.lakebase_project}", --lakebase_catalog, "${var.lakebase_catalog}", --wait_minutes, "0"]}
+        - task_key: export_reclog
+          environment_key: base
+          spark_python_task: {python_file: ../lakebase/export_reclog.py, parameters: [--root, "${workspace.file_path}", --catalog, "${var.catalog}", --project, "${var.lakebase_project}"]}
+
+    # ------------------------------------------------------------------ weekly retrain
+    pers_retrain:
+      name: pers-retrain
+      description: Retrain + register champion/challenger, roll the endpoint, refresh fallback recs and A/B results.
+      max_concurrent_runs: 1
+      environments: *envs
+      schedule:
+        quartz_cron_expression: "0 0 3 ? * SUN"
+        timezone_id: UTC
+        pause_status: PAUSED
+      tasks:
+        - task_key: train
+          environment_key: ml
+          spark_python_task: {python_file: ../ml/train.py, parameters: *args}
+        - task_key: deploy_serving
+          depends_on: [{task_key: train}]
+          environment_key: base
+          spark_python_task: {python_file: ../ml/deploy_serving.py, parameters: [--root, "${workspace.file_path}", --catalog, "${var.catalog}", --endpoint, "${var.serving_endpoint}", --scale_to_zero, "${var.serving_scale_to_zero}"]}
+        - task_key: batch_inference
+          depends_on: [{task_key: train}]
+          environment_key: ml
+          spark_python_task: {python_file: ../ml/batch_inference.py, parameters: *args}
+        - task_key: simulate_experiment
+          depends_on: [{task_key: train}]
+          environment_key: ml
+          spark_python_task: {python_file: ../experiments/simulate_ab.py, parameters: *args}
+        - task_key: lakebase_sync
+          depends_on: [{task_key: batch_inference}]
+          environment_key: base
+          spark_python_task: {python_file: ../lakebase/setup_lakebase.py, parameters: [--root, "${workspace.file_path}", --catalog, "${var.catalog}", --project, "${var.lakebase_project}", --lakebase_catalog, "${var.lakebase_catalog}", --wait_minutes, "0"]}
+
+    # ------------------------------------------------------------------ copilot evaluation
+    pers_agent_eval:
+      name: pers-agent-eval
+      description: MLflow GenAI evaluation of the merchandiser copilot on 20 golden questions.
+      environments:
+        - environment_key: eval
+          spec:
+            environment_version: "4"
+            dependencies:
+              - databricks-sdk>=0.150.0
+              - mlflow[databricks]>=3.4
+              - httpx>=0.27
+      tasks:
+        - task_key: evaluate
+          environment_key: eval
+          spark_python_task: {python_file: ../genai/agent_eval.py, parameters: [--root, "${workspace.file_path}", --catalog, "${var.catalog}", --warehouse_id, "${var.warehouse_id}"]}
+
+    # ------------------------------------------------------------------ re-run the A/B simulation (e.g. after segment changes)
+    pers_experiment:
+      name: pers-experiment
+      description: Re-simulate the A/B test on current features and refresh the campaign UC function.
+      environments: *envs
+      tasks:
+        - task_key: simulate_experiment
+          environment_key: ml
+          spark_python_task: {python_file: ../experiments/simulate_ab.py, parameters: *args}
+        - task_key: uc_functions
+          depends_on: [{task_key: simulate_experiment}]
+          environment_key: base
+          spark_python_task: {python_file: ../genai/uc_functions.py, parameters: *args}
+
+    # ------------------------------------------------------------------ review notebook (read-only walkthrough)
+    pers_review:
+      name: pers-review
+      description: Runs notebooks/review — job status, volumes, medallion samples, Lakebase, serving, Vector Search, Genie.
+      tasks:
+        - task_key: review
+          notebook_task:
+            notebook_path: ../notebooks/review.py
+            base_parameters:
+              catalog: ${var.catalog}
+              lakebase_project: ${var.lakebase_project}
+              serving_endpoint: ${var.serving_endpoint}
+              genie_title: ${var.genie_space_title}

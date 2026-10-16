@@ -1,0 +1,20 @@
+resources:
+  pipelines:
+    pers_pipeline:
+      name: pers-personalization-pipeline
+      catalog: ${var.catalog}
+      schema: silver
+      serverless: true
+      channel: PREVIEW
+      continuous: ${var.pipeline_continuous}
+      photon: true
+      configuration:
+        catalog: ${var.catalog}
+        landing: /Volumes/${var.catalog}/bronze/raw_landing
+      libraries:
+        - file:
+            path: ../pipelines/bronze.py
+        - file:
+            path: ../pipelines/silver.py
+        - file:
+            path: ../pipelines/gold.py

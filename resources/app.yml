@@ -1,0 +1,42 @@
+resources:
+  apps:
+    pers_app:
+      name: ${var.app_name}
+      description: Real-time personalization — storefront simulator, business console, Genie + merchandiser copilot
+      source_code_path: ../app
+      resources:
+        - name: sql-warehouse
+          sql_warehouse:
+            id: ${var.warehouse_id}
+            permission: CAN_USE
+        - name: postgres
+          postgres:
+            branch: ${resources.postgres_projects.pers_serving.name}/branches/production
+            database: ${resources.postgres_projects.pers_serving.name}/branches/production/databases/databricks-postgres
+            permission: CAN_CONNECT_AND_CREATE
+        - name: explain-llm
+          serving_endpoint:
+            name: ${var.explain_llm}
+            permission: CAN_QUERY
+        - name: agent-llm
+          serving_endpoint:
+            name: ${var.agent_llm}
+            permission: CAN_QUERY
+        - name: embeddings
+          serving_endpoint:
+            name: ${var.embedding_endpoint}
+            permission: CAN_QUERY
+      config:
+        command: ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+        env:
+          - {name: PERS_CATALOG, value: "${var.catalog}"}
+          - {name: DATABRICKS_WAREHOUSE_ID, value_from: sql-warehouse}
+          - {name: RECOMMENDER_ENDPOINT, value: "${var.serving_endpoint}"}
+          - {name: EXPLAIN_LLM, value_from: explain-llm}
+          - {name: AGENT_LLM, value_from: agent-llm}
+          - {name: EMBEDDING_ENDPOINT, value_from: embeddings}
+          - {name: VS_ENDPOINT, value: "${var.vs_endpoint}"}
+          - {name: VS_INDEX, value: "${var.catalog}.gold.product_index"}
+          - {name: GENIE_SPACE_TITLE, value: "${var.genie_space_title}"}
+          - {name: LAKEBASE_PROJECT, value: "${var.lakebase_project}"}
+          - {name: PIPELINE_NAME, value: "pers-personalization-pipeline"}

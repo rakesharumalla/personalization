@@ -1,0 +1,62 @@
+# Real-Time Personalization on Databricks — Declarative Automation Bundle
+#
+# Workspace-specific settings come from .env (see .env.example):
+#   DATABRICKS_CONFIG_PROFILE   CLI profile to deploy with
+#   BUNDLE_VAR_warehouse_id     serverless SQL warehouse id
+# Deploy:   set -a; source .env; set +a; databricks bundle deploy -t dev
+# Setup:    databricks bundle run pers_setup -t dev
+# App:      databricks bundle run pers_app -t dev
+bundle:
+  name: personalization
+
+include:
+  - resources/*.yml
+
+variables:
+  catalog:
+    description: Unity Catalog catalog that holds every schema of the solution
+    default: fevm_catalog_ra_test
+  warehouse_id:
+    description: Serverless SQL warehouse used by Genie, the app and SQL tasks (set BUNDLE_VAR_warehouse_id in .env)
+  lakebase_project:
+    description: Lakebase Autoscaling project serving the app hot path
+    default: pers-serving
+  lakebase_catalog:
+    description: >-
+      UC catalog that holds the synced-table entries (their Postgres schema is `serving`). A dedicated
+      Lakebase catalog needs CREATE CATALOG on the metastore; the solution catalog works too.
+    default: fevm_catalog_ra_test
+  serving_endpoint:
+    description: Model Serving endpoint for the two-stage recommender
+    default: pers-recommender
+  vs_endpoint:
+    description: Vector Search endpoint for catalog embeddings
+    default: pers-vs
+  explain_llm:
+    description: Foundation Model endpoint for "why this?" explanations (fast, cheap)
+    default: databricks-claude-haiku-4-5
+  agent_llm:
+    description: Foundation Model endpoint for the merchandiser copilot (tool calling)
+    default: databricks-claude-sonnet-4-5
+  embedding_endpoint:
+    description: Embedding endpoint for product descriptions
+    default: databricks-gte-large-en
+  pipeline_continuous:
+    description: Run the Lakeflow pipeline in continuous mode (demo window) or triggered (cost control)
+    default: false
+  serving_scale_to_zero:
+    description: Scale-to-zero for the recommender endpoint (spec keeps it off during demo windows)
+    default: "false"
+  app_name:
+    default: pers-personalization
+  genie_space_title:
+    default: Personalization Insights
+
+targets:
+  dev:
+    mode: development
+    default: true
+  prod:
+    mode: production
+    workspace:
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/prod
